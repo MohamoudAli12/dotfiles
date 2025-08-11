@@ -57,7 +57,8 @@
    MAX(0, MIN((y) + (h), (m)->wy + (m)->wh) - MAX((y), (m)->wy)))
 #define INTERSECTC(x,y,w,h,z)   (MAX(0, MIN((x)+(w),(z)->x+(z)->w) - MAX((x),(z)->x)) \
                                * MAX(0, MIN((y)+(h),(z)->y+(z)->h) - MAX((y),(z)->y)))
-#define ISVISIBLE(C) ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define ISVISIBLEONTAG(C,T)  ((C->tags & T))
+#define ISVISIBLE(C)         ISVISIBLEONTAG(C, C->mon->tagset[C->mon->seltags])
 #define HIDDEN(C)               ((getstate(C->win) == IconicState))
 #define LENGTH(X) (sizeof X / sizeof X[0])
 #define MOUSEMASK (BUTTONMASK | PointerMotionMask)
@@ -236,6 +237,7 @@ static int applysizehints(Client *c, int *x, int *y, int *w, int *h,
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
 static void attach(Client *c);
+static void attachBelow(Client *c);
 static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
 static void checkotherwm(void);
@@ -273,6 +275,7 @@ static unsigned int getsystraywidth();
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
+static Client *nexttagged(Client *c);
 static void hide(Client *c);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
@@ -496,6 +499,27 @@ void applyrules(Client *c) {
     XFree(ch.res_name);
   c->tags =
       c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
+}
+void
+attachBelow(Client *c)
+{
+	//If there is nothing on the monitor or the selected client is floating, attach as normal
+	if(c->mon->sel == NULL || c->mon->sel->isfloating) {
+        Client *at = nexttagged(c);
+        if(!at) {
+            attach(c);
+            return;
+            }
+        c->next = at->next;
+        at->next = c;
+		return;
+	}
+
+	//Set the new client's next property to the same as the currently selected clients next
+	c->next = c->mon->sel->next;
+	//Set the currently selected clients next property to the new client
+	c->mon->sel->next = c;
+
 }
 
 int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact) {
@@ -2095,7 +2119,7 @@ void manage(Window w, XWindowAttributes *wa) {
 	  c->isfloating = c->oldstate = trans != None || c->isfixed;
   if (c->isfloating)
     XRaiseWindow(dpy, c->win);
-  attach(c);
+  attachBelow(c);
   attachstack(c);
   XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32,
                   PropModeAppend, (unsigned char *)&(c->win), 1);
@@ -2485,6 +2509,16 @@ void restart(const Arg *arg) {
   running = 0;
 }
 
+ Client *
+nexttagged(Client *c) {
+	Client *walked = c->mon->clients;
+	for(;
+		walked && (walked->isfloating || !ISVISIBLEONTAG(walked, c->tags));
+		walked = walked->next
+	);
+	return walked;
+}
+
 Client *
 recttoclient(int x, int y, int w, int h)
 {
@@ -2700,7 +2734,7 @@ void sendmon(Client *c, Monitor *m) {
   detachstack(c);
   c->mon = m;
   c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
-  attach(c);
+  attachBelow(c);
   attachstack(c);
   setclienttagprop(c);
   focus(NULL);
@@ -3190,6 +3224,7 @@ void toggleview(const Arg *arg) {
          switchtag();
     selmon->tagset[selmon->seltags] = newtagset;
 
+				//attachBelow(c);
     	if (newtagset == ~0) {
 			selmon->pertag->prevtag = selmon->pertag->curtag;
 			selmon->pertag->curtag = 0;
@@ -3457,6 +3492,7 @@ int updategeom(void) {
 		    detachstack(c);
 		    c->mon = mons;
 		    attach(c);
+        attachBelow(c);
 		    attachstack(c);
 	    }
 	    if (m == selmon)
