@@ -40,7 +40,7 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font Mono:style:medium:size=36" };
 
 // theme
-#include "themes/onedark.h"
+#include "themes/catppuccin.h"
 
 static const char *colors[][3]      = {
     /*                     fg       bg      border */
@@ -62,13 +62,13 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static char *tags[] = {"", "", "", "", ""};
+static char *tags[] = {" ", " ", " ", " "};
 
 static const char* eww[] = { "eww", "open" , "eww", NULL };
 
 static const Launcher launchers[] = {
     /* command     name to display */
-    { eww,         "" },
+    { eww,         "󰣇 " },
 };
 
 static const int tagschemes[] = {
@@ -86,9 +86,9 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
-    { "Gimp",     NULL,       NULL,       0,            0,           1,           -1 },
-    { "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           -1 },
-    { "eww",      NULL,       NULL,       0,            0,           1,           -1 },
+    { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
+    { "Firefox",     NULL,       NULL,       1 << 1,          0,           0,           -1 },
+    { "Kicad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
 };
 
 /* layout(s) */
@@ -138,10 +138,10 @@ static const Key keys[] = {
 
     // brightness and audio 
     {0,             XF86XK_AudioLowerVolume,    spawn, {.v = downvol}},
-	{0,             XF86XK_AudioMute, spawn,    {.v = mutevol }},
-	{0,             XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
-	{0,				XF86XK_MonBrightnessUp,     spawn,	{.v = light_up}},
-	{0,				XF86XK_MonBrightnessDown,   spawn,	{.v = light_down}},
+	  {0,             XF86XK_AudioMute, spawn,    {.v = mutevol }},
+	  {0,             XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
+	  {0,				      XF86XK_MonBrightnessUp,     spawn,	{.v = light_up}},
+	  {0,				      XF86XK_MonBrightnessDown,   spawn,	{.v = light_down}},
 
     // screenshot fullscreen and cropped
     {MODKEY|ControlMask,                XK_u,       spawn,
