@@ -12,7 +12,5 @@ export ELECTRON_ENABLE_HIGH_DPI_SCALE=1
 export ELECTRON_FORCE_DEVICE_SCALE_FACTOR=2
 feh --bg-scale ~/wall/wall.png &
 picom &
-exec ~/.config/chadwm/scripts/bar.sh &
+~/.config/chadwm/scripts/bar.sh &
 while type chadwm >/dev/null; do chadwm && continue || break; done
-
-export QT_QPA_PLATFORMTHEME=qt5ct
