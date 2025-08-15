@@ -44,6 +44,7 @@
 window-decoration=server
 theme = catppuccin-mocha
 window-padding-balance = true
-font-family = MesloLGS Nerd Font Mono
+#font-family = MesloLGS Nerd Font Mono
+font-family = JetBrainsMono Nerd Font Mono
 shell-integration = zsh
 
