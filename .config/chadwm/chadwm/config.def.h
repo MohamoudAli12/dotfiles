@@ -3,7 +3,7 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 0;        /* border pixel of windows */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int default_border = 0;   /* to switch back to default border after dynamic border resizing via keybinds */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
@@ -137,11 +137,11 @@ static const Key keys[] = {
     /* modifier                         key         function        argument */
 
     // brightness and audio 
-    {0,             XF86XK_AudioLowerVolume,    spawn, {.v = downvol}},
-	  {0,             XF86XK_AudioMute, spawn,    {.v = mutevol }},
-	  {0,             XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
-	  {0,				      XF86XK_MonBrightnessUp,     spawn,	{.v = light_up}},
-	  {0,				      XF86XK_MonBrightnessDown,   spawn,	{.v = light_down}},
+    {0,                               XF86XK_AudioLowerVolume,    spawn, {.v = downvol}},
+    {0,                               XF86XK_AudioMute, spawn,    {.v = mutevol }},
+    {0,                               XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
+    {0,				      XF86XK_MonBrightnessUp,     spawn,	{.v = light_up}},
+    {0,				      XF86XK_MonBrightnessDown,   spawn,	{.v = light_down}},
 
     // screenshot fullscreen and cropped
     {MODKEY|ControlMask,                XK_u,       spawn,

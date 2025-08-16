@@ -46,7 +46,17 @@ require("lazy").setup({
     end,
   },
   {'akinsho/bufferline.nvim', version = "*", dependencies = 'nvim-tree/nvim-web-devicons'},
+  {
+   'terrortylor/nvim-comment',
+   config = function()
+	   require("nvim_comment").setup({create_mappings =false})
+   end,
+  },
 
+  {"nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate"},
+
+
+  
   },
   -- Configure any other settings here. See the documentation for more details.
   -- colorscheme that will be used when installing plugins.

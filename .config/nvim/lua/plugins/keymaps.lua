@@ -9,3 +9,7 @@ vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help ta
 
 vim.keymap.set("n","<leader>e", ":NvimTreeFindFileToggle<cr>")
 
+--nvim-comment
+vim.keymap.set({"n","v"}, "<leader>/", ":CommentToggle<cr>")
+
+
