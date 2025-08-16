@@ -12,16 +12,41 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
     os.exit(1)
   end
 end
+
 vim.opt.rtp:prepend(lazypath)
+
 -- Setup lazy.nvim
 require("lazy").setup({
   spec = {
     -- import your plugins
     { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
+   
     {
     'nvim-lualine/lualine.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' }
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+	    require('lualine').setup()
+    end,
     },
+
+    {
+    'nvim-telescope/telescope.nvim', branch = '0.1.x',
+      dependencies = { 'nvim-lua/plenary.nvim' }
+    },
+
+    {
+     "nvim-tree/nvim-tree.lua",
+     version = "*",
+     lazy = false,
+     dependencies = {
+    "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+             require("nvim-tree").setup {}
+    end,
+  },
+  {'akinsho/bufferline.nvim', version = "*", dependencies = 'nvim-tree/nvim-web-devicons'},
+
   },
   -- Configure any other settings here. See the documentation for more details.
   -- colorscheme that will be used when installing plugins.
