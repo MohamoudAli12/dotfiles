@@ -11,10 +11,11 @@ vim.opt.wrap = false
 vim.opt.showmode=false --don;t show mode in command line
 vim.opt.ignorecase = true -- ignore case when searching
 vim.opt.smartcase = true -- unless capital letter in search
-vim.opt.hlsearch = false -- do not highlight all matches on previous search pattern
+vim.opt.hlsearch = true -- do not highlight all matches on previous search pattern
 vim.opt.incsearch = true -- incrementally highlight searches as you type
 vim.opt.scrolloff = 8 -- minimum number of lines to keep above and below the cursor
 vim.opt.sidescrolloff = 8 --minimum number of columns to keep above and below the cursor
+vim.g.have_nerd_font = true
 
 
 vim.api.nvim_create_autocmd("BufReadPost", {
@@ -43,3 +44,33 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.shiftwidth = 4
   end,
 })
+
+
+ -- Diagnostic Config
+      -- See :help vim.diagnostic.Opts
+      vim.diagnostic.config( {
+        severity_sort = true,
+        float = { border = 'rounded', source = 'if_many' },
+        underline = { severity = vim.diagnostic.severity.ERROR },
+        signs = vim.g.have_nerd_font and {
+          text = {
+            [vim.diagnostic.severity.ERROR] = '',
+            [vim.diagnostic.severity.WARN] = '',
+            [vim.diagnostic.severity.INFO] = '',
+            [vim.diagnostic.severity.HINT] = '',
+          },
+        } or {},
+        virtual_text = {
+          source = 'if_many',
+          spacing = 2,
+          format = function(diagnostic)
+            local diagnostic_message = {
+              [vim.diagnostic.severity.ERROR] = diagnostic.message,
+              [vim.diagnostic.severity.WARN] = diagnostic.message,
+              [vim.diagnostic.severity.INFO] = diagnostic.message,
+              [vim.diagnostic.severity.HINT] = diagnostic.message,
+            }
+            return diagnostic_message[diagnostic.severity]
+          end,
+        },
+      })

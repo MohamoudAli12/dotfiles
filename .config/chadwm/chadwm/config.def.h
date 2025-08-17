@@ -3,7 +3,7 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int borderpx  = 5;        /* border pixel of windows */
 static const unsigned int default_border = 0;   /* to switch back to default border after dynamic border resizing via keybinds */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
@@ -87,8 +87,8 @@ static const Rule rules[] = {
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
     { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
-    { "Firefox",     NULL,       NULL,       1 << 1,          0,           0,           -1 },
-    { "Kicad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
+    { "LibreWolf",     NULL,       NULL,       1 << 1,          0,           0,           -1 },
+    { "KiCad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
 };
 
 /* layout(s) */
