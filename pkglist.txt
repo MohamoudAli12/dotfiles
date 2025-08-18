@@ -5,6 +5,7 @@ base
 base-devel
 efibootmgr
 fastfetch
+fd
 feh
 fzf
 ghostty
@@ -19,11 +20,11 @@ iwd
 kicad
 kicad-library
 kicad-library-3d
-lf
 libpulse
 librewolf-bin
 linux
 linux-firmware
+luarocks
 neovim
 nvidia
 octave
@@ -34,13 +35,17 @@ pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
+python-pip
 ripgrep
 rofi
 sof-firmware
 stow
 tlp
 tlp-rdw
+torbrowser-launcher
+tree
 ttf-jetbrains-mono-nerd
+ttf-meslo-nerd
 ufw
 wireplumber
 xf86-video-vesa
@@ -95,4 +100,6 @@ xorg-xwud
 xss-lock
 yay
 yay-debug
+yazi
 zram-generator
+zsh
