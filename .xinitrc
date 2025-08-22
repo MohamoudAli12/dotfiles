@@ -12,9 +12,9 @@ export ELECTRON_FORCE_DEVICE_SCALE_FACTOR=2
 # Set idle time to 5 minutes
 xset s 300 300
 xset dpms 300 300 300
-
-# Run xss-lock with your lock script
-xss-lock ~/lock.sh &
+numlockx &
+xss-lock ~/myscripts/lock.sh &
+~/myscripts/auto_suspend.sh &
 feh --bg-scale ~/wall/wall.png &
 picom &
 ~/.config/chadwm/scripts/bar.sh &

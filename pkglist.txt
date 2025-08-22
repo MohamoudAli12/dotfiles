@@ -1,9 +1,14 @@
 acpi
 alsa-utils
-autorandr
 base
 base-devel
+boost
+cgal
+cmake
+cython
+dunst
 efibootmgr
+fast_float
 fastfetch
 fd
 feh
@@ -25,7 +30,10 @@ librewolf-bin
 linux
 linux-firmware
 luarocks
+mesa-utils
 neovim
+nlohmann-json
+numlockx
 nvidia
 octave
 openssh
@@ -36,10 +44,12 @@ pipewire-alsa
 pipewire-jack
 pipewire-pulse
 python-pip
+python-setuptools
 ripgrep
 rofi
 sof-firmware
 stow
+tinyxml
 tlp
 tlp-rdw
 torbrowser-launcher
@@ -97,6 +107,7 @@ xorg-xwayland
 xorg-xwd
 xorg-xwininfo
 xorg-xwud
+xprintidle
 xss-lock
 yay
 yay-debug
