@@ -271,7 +271,8 @@ static Atom getatomprop(Client *c, Atom prop);
 static Picture geticonprop(Window w, unsigned int *icw, unsigned int *ich);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
-static unsigned int getsystraywidth();
+static pid_t getstatusbarpid(void);
+static unsigned int getsystraywidth(void);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
@@ -323,6 +324,7 @@ static void seturgent(Client *c, int urg);
 static void show(Client *c);
 static void showhide(Client *c);
 static void showtagpreview(int tag);
+static void sigstatusbar(const Arg *arg);
 static void spawn(const Arg *arg);
 static void switchtag(void);
 static Monitor *systraytomon(Monitor *m);
@@ -370,6 +372,9 @@ static Systray *systray = NULL;
 static const char broken[] = "broken";
 static char stext[1024];
 static int screen;
+static int statussig;
+static int statusw;
+static pid_t statuspid = -1;
 static int sw, sh;      /* X display screen geometry width, height */
 static int bh;          /* bar height */
 static int th = 0;      /* tab bar geometry */
@@ -673,11 +678,36 @@ void buttonpress(XEvent *e) {
 				return;
 			}
 	}
+	if (ev->x > selmon->ww - statusw) {
+			x = selmon->ww - statusw;
+			click = ClkStatusText;
 
-  if (ev->x > selmon->ww - (int)TEXTW(stext))
-         click = ClkStatusText;
+			char *text, *s, ch;
+			statussig = 0;
+			for (text = s = stext; *s && x <= ev->x; s++) {
+				if ((unsigned char)(*s) < ' ') {
+					ch = *s;
+					*s = '\0';
+					x += TEXTW(text) - lrpad;
+					*s = ch;
+					text = s + 1;
+					if (x >= ev->x)
+						break;
+					statussig = ch;
+				} else if (*s == '^') {
+					*s = '\0';
+					x += TEXTW(text) - lrpad;
+					*s = '^';
+					if (*(++s) == 'f')
+						x += atoi(++s);
+					while (*(s++) != '^');
+					text = s;
+					s--;
+				}
+			}
+		}
   else
-         click = ClkWinTitle;
+    click = ClkWinTitle;
   }
     	
 	if(ev->window == selmon->tabwin) {
@@ -1867,6 +1897,28 @@ Atom getatomprop(Client *c, Atom prop) {
     XFree(p);
   }
   return atom;
+}
+static pid_t getstatusbarpid(void)
+{
+	char buf[32], *str = buf, *c;
+	FILE *fp;
+
+	if (statuspid > 0) {
+		snprintf(buf, sizeof(buf), "/proc/%u/cmdline", statuspid);
+		if ((fp = fopen(buf, "r"))) {
+			fgets(buf, sizeof(buf), fp);
+			while ((c = strchr(str, '/')))
+				str = c + 1;
+			fclose(fp);
+			if (!strcmp(str, STATUSBAR))
+				return statuspid;
+		}
+	}
+	if (!(fp = popen("pidof -s "STATUSBAR, "r")))
+		return -1;
+	fgets(buf, sizeof(buf), fp);
+	pclose(fp);
+	return strtoul(buf, NULL, 10);
 }
 
 int getrootptr(int *x, int *y) {
@@ -3080,6 +3132,20 @@ showtagpreview(int tag)
 		XMapWindow(dpy, selmon->tagwin);
 	} else
 		XUnmapWindow(dpy, selmon->tagwin);
+}
+
+void
+sigstatusbar(const Arg *arg)
+{
+	union sigval sv;
+
+	if (!statussig)
+		return;
+	sv.sival_int = arg->i;
+	if ((statuspid = getstatusbarpid()) <= 0)
+		return;
+
+	sigqueue(statuspid, SIGRTMIN+statussig, sv);
 }
 
 

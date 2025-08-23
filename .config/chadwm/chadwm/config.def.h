@@ -39,6 +39,7 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 
 static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font Mono:style:medium:size=36" };
 
+#define STATUSBAR "dwmblocks"
 // theme
 #include "themes/catppuccin.h"
 
@@ -257,8 +258,10 @@ static const Button buttons[] = {
     { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
     { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
     { ClkWinTitle,          0,              Button2,        zoom,           {0} },
-    { ClkStatusText,        0,              Button2,        spawn,          SHCMD("ghostty") },
-
+    { ClkStatusText,        0,              Button1,        sigstatusbar,   {.i = 1} },
+	  { ClkStatusText,        0,              Button2,        sigstatusbar,   {.i = 2} },
+	  { ClkStatusText,        0,              Button3,        sigstatusbar,   {.i = 3} },
+ 	
     /* Keep movemouse? */
     /* { ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} }, */
 
