@@ -28,8 +28,40 @@ pkg_updates() {
 }
 
 battery() {
-  get_capacity="$(cat /sys/class/power_supply/BAT0/capacity)"
-  printf "^c$blue^   $get_capacity"
+  # get_capacity="$(cat /sys/class/power_supply/BAT0/capacity)"
+  # printf "^c$blue^   $get_capacity"
+for battery in /sys/class/power_supply/BAT?*; do
+    # If non-first battery, print a space separator.
+    [ -n "${capacity+x}" ] && printf " "
+
+    capacity="$(cat "$battery/capacity" 2>&1)"
+    if [ "$capacity" -gt 90 ]; then
+        status=" "
+    elif [ "$capacity" -gt 60 ]; then
+        status=" "
+    elif [ "$capacity" -gt 40 ]; then
+        status=" "
+    elif [ "$capacity" -gt 10 ]; then
+        status=" "
+    else
+        status=" "
+    fi
+
+    case "$(cat "$battery/status" 2>&1)" in
+        Full) status=" " ;;
+        Discharging)
+            if [ "$capacity" -le 20 ]; then
+                status=" $status"
+            fi
+            ;;
+        Charging) status="󰚥 $status" ;;
+        "Not charging") status=" " ;;
+        Unknown) status="? $status" ;;
+        *) exit 1 ;;
+    esac
+
+    printf "^c$blue^ $status$capacity%"
+done
 }
 
 brightness() {
