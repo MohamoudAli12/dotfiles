@@ -71,6 +71,20 @@ brightness() {
   printf "^c$red^   "
   printf "^c$red^%d%%\n" "$percent"
 }
+volume() {
+  vol_info=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+  vol_percent=$(echo "$vol_info" | awk '{printf "%d", $2 * 100}')
+  is_muted=$(echo "$vol_info" | grep -q MUTED && echo "yes" || echo "no")
+
+  if [ "$is_muted" = "yes" ]; then
+    icon="󰝟 "  # Muted icon
+  else
+    icon=" "  # Volume icon
+  fi
+
+  printf "^c$blue^ $icon "
+  printf "^c$blue^%s%%\n" "$vol_percent"
+}
 
 mem() {
   printf "^c$blue^^b$black^  "
@@ -97,5 +111,5 @@ while true; do
   [ $interval = 0 ] || [ $(($interval % 120)) = 0 ] && updates=$(pkg_updates)
   interval=$((interval + 1))
 
-  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(clock)"
+  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(volume) $(clock)"
 done
