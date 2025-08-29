@@ -28,9 +28,9 @@ static const int horizpadtabo       = 15;
 static const int scalepreview       = 4;
 static const int tag_preview        = 1;        /* 1 means enable, 0 is off */
 static const int colorfultag        = 1;        /* 0 means use SchemeSel for selected non vacant tag */
-static const char *upvol[]   = { "/usr/bin/wpctl", "set-volume", "35", "5%+",     NULL };
-static const char *downvol[] = { "/usr/bin/wpctl", "set-volume", "35", "5%-",     NULL };
-static const char *mutevol[] = { "/usr/bin/wpctl", "set-mute",   "35", "toggle",  NULL };
+static const char *upvol[]   = { "/usr/bin/wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",     NULL };
+static const char *downvol[] = { "/usr/bin/wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",     NULL };
+static const char *mutevol[] = { "/usr/bin/wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@", "toggle",  NULL };
 static const char *light_up[] = {"/usr/bin/brightnessctl", "set", "+5%", NULL};
 static const char *light_down[] = {"/usr/bin/brightnessctl", "set", "5%-", NULL};
 static const int new_window_attach_on_end = 0; /*  1 means the new window will attach on the end; 0 means the new window will attach on the front,default is front */
@@ -88,7 +88,7 @@ static const Rule rules[] = {
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
     { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
-    { "LibreWolf",     NULL,       NULL,       1 << 1,          0,           0,           -1 },
+    { "LibreWolf",   NULL,       NULL,       1 << 1,          0,           0,           -1 },
     { "KiCad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
 };
 
@@ -139,10 +139,10 @@ static const Key keys[] = {
 
     // brightness and audio 
     {0,                               XF86XK_AudioLowerVolume,    spawn, {.v = downvol}},
-    {0,                               XF86XK_AudioMute, spawn,    {.v = mutevol }},
+    {0,                               XF86XK_AudioMute,           spawn, {.v = mutevol }},
     {0,                               XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
-    {0,				      XF86XK_MonBrightnessUp,     spawn,	{.v = light_up}},
-    {0,				      XF86XK_MonBrightnessDown,   spawn,	{.v = light_down}},
+    {0,                               XF86XK_MonBrightnessUp,     spawn, {.v = light_up}},
+    {0,                               XF86XK_MonBrightnessDown,   spawn, {.v = light_down}},
 
     // screenshot fullscreen and cropped
     {MODKEY|ControlMask,                XK_u,       spawn,
@@ -152,6 +152,7 @@ static const Key keys[] = {
 
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY,                           XK_Return,  spawn,          SHCMD("ghostty")},
+    { MODKEY,                           XK_space,   spawn,          SHCMD("lock.sh")},
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },
@@ -212,7 +213,7 @@ static const Key keys[] = {
     { MODKEY,                           XK_m,       setlayout,      {.v = &layouts[2]} },
     { MODKEY|ControlMask,               XK_g,       setlayout,      {.v = &layouts[10]} },
     { MODKEY|ControlMask|ShiftMask,     XK_t,       setlayout,      {.v = &layouts[13]} },
-    { MODKEY,                           XK_space,   setlayout,      {0} },
+    { MODKEY|ControlMask,               XK_space,   setlayout,      {0} },
     { MODKEY|ControlMask,               XK_comma,   cyclelayout,    {.i = -1 } },
     { MODKEY|ControlMask,               XK_period,  cyclelayout,    {.i = +1 } },
     { MODKEY,                           XK_0,       view,           {.ui = ~0 } },
