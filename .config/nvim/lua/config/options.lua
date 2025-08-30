@@ -17,7 +17,7 @@ vim.opt.scrolloff = 8 -- minimum number of lines to keep above and below the cur
 vim.opt.sidescrolloff = 8 --minimum number of columns to keep above and below the cursor
 vim.g.have_nerd_font = true
 vim.opt.guicursor =
-  'n-v-c:block,i-ci-ve:block,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175'
+  'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175'
 -- Center screen when jumping
 vim.keymap.set('n', 'n', 'nzzzv', { desc = 'Next search result (centered)' })
 vim.keymap.set('n', 'N', 'Nzzzv', { desc = 'Previous search result (centered)' })

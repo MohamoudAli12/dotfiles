@@ -1,3 +1,4 @@
 *.idx
 .config/dconf/*
 .config/pulse/*
+.config/chadwm/chadwm/.cache/*

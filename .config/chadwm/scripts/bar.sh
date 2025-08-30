@@ -61,7 +61,7 @@ for battery in /sys/class/power_supply/BAT?*; do
         status="^c$green^ "
     elif [ "$capacity" -gt 40 ]; then
         status="^c$green^ "
-    elif [ "$capacity" -le 20 ]; then
+    elif [ "$capacity" -gt 20 ]; then
         status=" "
 
     else
@@ -101,12 +101,26 @@ volume() {
   if [ "$is_muted" = "yes" ]; then
     icon="^c$red^󰝟 "  # Muted icon
   else
-    icon="^c$green^ "  # Volume icon
+    icon="^c$green^"  # Volume icon
   fi
 
   printf " $icon "
   printf "^c$green^%s%%\n" "$vol_percent"
 }
+mic() {
+    # Get microphone mute state using wpctl
+     MIC_STATE=$(wpctl status | grep -q MUTED && echo "yes" || echo "no")
+
+    if [[ $MIC_STATE == "no" ]]; then
+        # If mic is muted, display red icon
+        printf "^c$green^  "
+        
+    else
+        # If mic is unmuted, display green icon
+        printf "^c$red^ 󰍭 "
+    fi
+}
+
 mem() {
   # Get total memory and used memory
   total_mem=$(free -h | awk '/^Mem/ { print $2 }' | sed s/i//g)
@@ -146,5 +160,5 @@ while true; do
   [ $interval = 0 ] || [ $(($interval % 120)) = 0 ] && updates=$(pkg_updates)
   interval=$((interval + 1))
 
-  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(volume) $(clock)"
+  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(mic) $(volume) $(clock)"
 done

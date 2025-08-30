@@ -31,6 +31,7 @@ static const int colorfultag        = 1;        /* 0 means use SchemeSel for sel
 static const char *upvol[]   = { "/usr/bin/wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",     NULL };
 static const char *downvol[] = { "/usr/bin/wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",     NULL };
 static const char *mutevol[] = { "/usr/bin/wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@", "toggle",  NULL };
+static const char *mutemic[] = { "/usr/bin/wpctl", "set-mute",   "@DEFAULT_AUDIO_SOURCE@", "toggle",  NULL };
 static const char *light_up[] = {"/usr/bin/brightnessctl", "set", "+5%", NULL};
 static const char *light_down[] = {"/usr/bin/brightnessctl", "set", "5%-", NULL};
 static const int new_window_attach_on_end = 0; /*  1 means the new window will attach on the end; 0 means the new window will attach on the front,default is front */
@@ -140,6 +141,7 @@ static const Key keys[] = {
     // brightness and audio 
     {0,                               XF86XK_AudioLowerVolume,    spawn, {.v = downvol}},
     {0,                               XF86XK_AudioMute,           spawn, {.v = mutevol }},
+    {0,                               XF86XK_AudioMicMute,        spawn, {.v = mutemic }},
     {0,                               XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
     {0,                               XF86XK_MonBrightnessUp,     spawn, {.v = light_up}},
     {0,                               XF86XK_MonBrightnessDown,   spawn, {.v = light_down}},
@@ -259,7 +261,6 @@ static const Button buttons[] = {
     /* click                event mask      button          function        argument */
     { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
     { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
-    { ClkWinTitle,          0,              Button2,        zoom,           {0} },
     { ClkStatusText,        0,              Button1,        sigstatusbar,   {.i = 1} },
 	  { ClkStatusText,        0,              Button2,        sigstatusbar,   {.i = 2} },
 	  { ClkStatusText,        0,              Button3,        sigstatusbar,   {.i = 3} },
