@@ -17,7 +17,9 @@ xset dpms 600 600 600
 numlockx &
 xss-lock ~/myscripts/lock.sh &
 ~/myscripts/auto_suspend.sh &
-feh --bg-scale ~/wall/wall.png &
+
+~/dotfiles/myscripts/cycle_wall.sh
+
 picom &
 ~/.config/chadwm/scripts/bar.sh &
 while type chadwm >/dev/null; do chadwm && continue || break; done

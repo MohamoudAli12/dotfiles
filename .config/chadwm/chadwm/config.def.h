@@ -153,6 +153,7 @@ static const Key keys[] = {
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY,                           XK_Return,  spawn,          SHCMD("ghostty")},
     { MODKEY,                           XK_space,   spawn,          SHCMD("lock.sh")},
+    { MODKEY,                           XK_w,        spawn,          SHCMD("cycle_wall.sh")},
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },

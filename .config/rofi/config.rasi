@@ -4,15 +4,15 @@ configuration{
     font: "Iosevka 30";
     show-icons: true;
     icon-theme: "Paper Mono";
-    terminal: "st";
+    terminal: "ghostty";
     drun-display-format: "{icon} {name}";
     location: 0;
     disable-history: false;
     hide-scrollbar: true;
-    display-drun: "   Apps ";
+    display-drun: " 󱓟  Launch ";
 }
 
-@theme "~/.config/rofi/themes/dracula"
+@theme "~/.config/rofi/themes/catppuccin-mocha"
 
 element-text, element-icon , mode-switcher {
     background-color: inherit;

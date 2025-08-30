@@ -1,0 +1,15 @@
+/* Catppuccin Mocha Theme for Rofi */
+
+
+* {
+    bg-col: #1E1D2D;         /* Background color */
+    bg-col-light: #4C3F52;   /* Light background for selection */
+    border-col: #96CDFB;     /* Border color */
+    selected-col: #585767;   /* Selected item background */
+    blue: #96CDFB;           /* Blue color for highlights */
+    fg-col: #D9E0EE;         /* Default foreground text color */
+    fg-col2: #C5A0E6;        /* Secondary foreground color */
+    grey: #6C5D7B;           /* Grey color for inactive items */
+    width: 600;              /* Width of the menu */
+}
+
