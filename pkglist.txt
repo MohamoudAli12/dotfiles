@@ -1,8 +1,11 @@
 acpi
-alsa-utils
 base
 base-devel
+bc
+blueman
+bluez-utils
 boost
+brightnessctl
 cgal
 cmake
 cython
@@ -30,14 +33,17 @@ librewolf-bin
 linux
 linux-firmware
 luarocks
+maim
 mesa-utils
 neovim
 nlohmann-json
 numlockx
 nvidia
+obsidian
 octave
 openssh
 pacman-contrib
+pavucontrol
 picom
 pipewire
 pipewire-alsa
@@ -47,6 +53,7 @@ python-pip
 python-setuptools
 ripgrep
 rofi
+rtkit
 sof-firmware
 stow
 tinyxml
@@ -58,6 +65,7 @@ ttf-jetbrains-mono-nerd
 ttf-meslo-nerd
 ufw
 wireplumber
+xclip
 xf86-video-vesa
 xorg-bdftopcf
 xorg-docs
@@ -111,6 +119,7 @@ xprintidle
 xss-lock
 yay
 yay-debug
-yazi
+zathura
+zathura-pdf-poppler
 zram-generator
 zsh

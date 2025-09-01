@@ -39,7 +39,6 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 #define ICONSPACING 8 /* space between icon and title */
 
 static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font Mono:style:medium:size=36" };
-
 #define STATUSBAR "dwmblocks"
 // theme
 #include "themes/catppuccin.h"
@@ -145,11 +144,12 @@ static const Key keys[] = {
     {0,                               XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
     {0,                               XF86XK_MonBrightnessUp,     spawn, {.v = light_up}},
     {0,                               XF86XK_MonBrightnessDown,   spawn, {.v = light_down}},
+    {0,                               XK_Num_Lock,                spawn, SHCMD("numlockx toggle")},
 
     // screenshot fullscreen and cropped
-    {MODKEY|ControlMask,                XK_u,       spawn,
+    {MODKEY|ControlMask,                XK_p,       spawn,
         SHCMD("maim | xclip -selection clipboard -t image/png")},
-    {MODKEY,                            XK_u,       spawn,
+    {MODKEY,                            XK_p,       spawn,
         SHCMD("maim --select | xclip -selection clipboard -t image/png")},
 
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
