@@ -1,7 +1,7 @@
 {
   "appearance": {
     "color_theme": "_builtin_default",
-    "left_frame_width": 250
+    "left_frame_width": 520
   },
   "color_picker": {
     "default_tab": 0
@@ -66,6 +66,7 @@
   "system": {
     "check_for_kicad_updates": true,
     "file_history": [
+      "/home/mohamoud/pub_repos/ThunderScope/Hardware/KiCad/Thunderscope_Rev5.1/Thunderscope_Rev5.1.kicad_pro",
       "/home/mohamoud/projects/kicad/Test/Test.kicad_pro",
       "/home/mohamoud/tese/tese.kicad_pro"
     ],
@@ -74,11 +75,9 @@
     "last_imperial_units": 5,
     "last_metric_units": 1,
     "last_received_update": "",
-    "last_update_check_time": "2025-08-31T13:48:47",
+    "last_update_check_time": "2025-09-01T21:22:23",
     "max_undo_items": 0,
-    "open_projects": [
-      "/home/mohamoud/projects/kicad/Test/Test.kicad_pro"
-    ],
+    "open_projects": [],
     "show_import_issues": true,
     "units": 1
   },
@@ -237,8 +236,8 @@
       "user_grid_y": ""
     },
     "maximized": false,
-    "mru_path": "/home/mohamoud/projects/kicad/Test/",
-    "perspective": "layout2|name=ProjectTree;caption=Project Files;state=1532;dir=4;layer=1;row=0;pos=0;prop=100000;bestw=250;besth=-1;minw=250;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Editors;caption=Editors;state=508;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=734;besth=590;minw=734;minh=590;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=MainToolbar;caption=;state=139596;dir=4;layer=2;row=0;pos=0;prop=100000;bestw=34;besth=227;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(4,2,0)=34|dock_size(4,1,0)=250|dock_size(5,0,0)=734|",
+    "mru_path": "/home/mohamoud/pub_repos/ThunderScope/Hardware/KiCad/Thunderscope_Rev5.1/",
+    "perspective": "layout2|name=MainToolbar;caption=;state=139596;dir=4;layer=2;row=0;pos=0;prop=100000;bestw=34;besth=227;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=ProjectTree;caption=Project Files;state=1532;dir=4;layer=1;row=0;pos=0;prop=100000;bestw=413;besth=-1;minw=250;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Editors;caption=Editors;state=508;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=734;besth=590;minw=734;minh=590;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(4,2,0)=34|dock_size(4,1,0)=520|dock_size(5,0,0)=734|",
     "pos_x": 5,
     "pos_y": 48,
     "size_x": 1905,

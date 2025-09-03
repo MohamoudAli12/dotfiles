@@ -87,7 +87,7 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
-    { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
+    // { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
     { "LibreWolf",   NULL,       NULL,       1 << 1,          0,           0,           -1 },
     { "KiCad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
 };
@@ -144,18 +144,18 @@ static const Key keys[] = {
     {0,                               XF86XK_AudioRaiseVolume,    spawn, {.v = upvol}},
     {0,                               XF86XK_MonBrightnessUp,     spawn, {.v = light_up}},
     {0,                               XF86XK_MonBrightnessDown,   spawn, {.v = light_down}},
-    {0,                               XK_Num_Lock,                spawn, SHCMD("numlockx toggle")},
+    {Mod2Mask,                        XK_Num_Lock,                spawn, SHCMD("numlockx toggle")},
 
     // screenshot fullscreen and cropped
     {MODKEY|ControlMask,                XK_p,       spawn,
-        SHCMD("maim | xclip -selection clipboard -t image/png")},
+        SHCMD("maim -s | xclip -selection clipboard -t image/png")},
     {MODKEY,                            XK_p,       spawn,
-        SHCMD("maim --select | xclip -selection clipboard -t image/png")},
+        SHCMD("maim -s ~/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png")},
 
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY,                           XK_Return,  spawn,          SHCMD("ghostty")},
     { MODKEY,                           XK_space,   spawn,          SHCMD("lock.sh")},
-    { MODKEY,                           XK_w,        spawn,          SHCMD("cycle_wall.sh")},
+    { MODKEY,                           XK_w,       spawn,          SHCMD("cycle_wall.sh")},
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },
