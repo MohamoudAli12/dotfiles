@@ -147,15 +147,16 @@ static const Key keys[] = {
     {Mod2Mask,                        XK_Num_Lock,                spawn, SHCMD("numlockx toggle")},
 
     // screenshot fullscreen and cropped
-    {MODKEY|ControlMask,                XK_p,       spawn,
+    {MODKEY|ControlMask,                XK_Print,       spawn,
         SHCMD("maim -s | xclip -selection clipboard -t image/png")},
-    {MODKEY,                            XK_p,       spawn,
+    {MODKEY,                            XK_Print,       spawn,
         SHCMD("maim -s ~/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png")},
 
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY,                           XK_Return,  spawn,          SHCMD("ghostty")},
     { MODKEY,                           XK_space,   spawn,          SHCMD("lock.sh")},
     { MODKEY,                           XK_w,       spawn,          SHCMD("cycle_wall.sh")},
+    { MODKEY,                           XK_n,       spawn,          SHCMD("wifi.sh")},
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },

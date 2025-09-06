@@ -34,6 +34,88 @@
             "pinned": false,
             "repository_id": "46f88614eade3439",
             "repository_name": "KiCad official repository"
+        },
+        {
+            "current_version": "1.0.1",
+            "install_timestamp": 1756897744,
+            "package": {
+                "author": {
+                    "contact": {
+                        "web": "https://github.com/clovergit"
+                    },
+                    "name": "CloverGit"
+                },
+                "description": "A theme that is rich in technology, Inspired by Altium Circuit Studio",
+                "description_full": "Designed by @CloverGit, Inspired by Altium Circuit Studio.\n Read more at https://github.com/clovergit/kicad-theme-skyline",
+                "identifier": "com.github.clovergit.kicad-theme-skyline",
+                "license": "MIT",
+                "maintainer": {
+                    "contact": {
+                        "web": "https://github.com/clovergit"
+                    },
+                    "name": "CloverGit"
+                },
+                "name": "Skyline",
+                "resources": {
+                    "Github": "https://github.com/clovergit/kicad-theme-skyline"
+                },
+                "type": "colortheme",
+                "versions": [
+                    {
+                        "download_sha256": "7525662df15bb60a26cacef26fe4effc6e7bd4ae18578cafd8fac0713c88db3d",
+                        "download_size": 10462,
+                        "download_url": "https://github.com/clovergit/kicad-theme-skyline/releases/download/v1.0.1/kicad-theme-skyline.zip",
+                        "install_size": 16183,
+                        "kicad_version": "7.0",
+                        "status": "stable",
+                        "version": "1.0.1"
+                    }
+                ]
+            },
+            "pinned": false,
+            "repository_id": "46f88614eade3439",
+            "repository_name": "KiCad official repository"
+        },
+        {
+            "current_version": "1.1",
+            "install_timestamp": 1756897726,
+            "package": {
+                "author": {
+                    "contact": {
+                        "web": "https://github.com/wykys"
+                    },
+                    "name": "Jan Vykydal"
+                },
+                "description": "Designed by wykys, Inspired by Altium",
+                "description_full": "Designed by wykys, Inspired by Altium",
+                "identifier": "com.github.pointhi.kicad-color-schemes.wlight",
+                "license": "CC0-1.0",
+                "maintainer": {
+                    "contact": {
+                        "web": "https://github.com/pointhi/kicad-color-schemes/"
+                    },
+                    "name": "Thomas Pointhuber"
+                },
+                "name": "wLight Theme",
+                "resources": {
+                    "Github": "https://github.com/pointhi/kicad-color-schemes"
+                },
+                "type": "colortheme",
+                "versions": [
+                    {
+                        "download_sha256": "73b9810725f93c85982d554fc3c500715bdd4bcce5559d735f229c5a8174cc7b",
+                        "download_size": 4322,
+                        "download_url": "https://github.com/pointhi/kicad-color-schemes/releases/download/2021-12-05/com.github.pointhi.kicad-color-schemes.wlight_v1.1_pcm.zip",
+                        "install_size": 5486,
+                        "kicad_version": "5.99",
+                        "status": "stable",
+                        "version": "1.1"
+                    }
+                ]
+            },
+            "pinned": false,
+            "repository_id": "46f88614eade3439",
+            "repository_name": "KiCad official repository"
         }
     ]
 }

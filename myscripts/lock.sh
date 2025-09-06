@@ -1,5 +1,5 @@
 #!/bin/bash
-image="$HOME/dotfiles/wall/lock.png"
+image="$HOME/dotfiles/lockscreen/lock.png"
 if [ -f "$image" ]; then
   i3lock -i "$image" -n -e
 else
