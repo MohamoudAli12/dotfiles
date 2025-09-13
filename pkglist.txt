@@ -54,8 +54,10 @@ python-setuptools
 ripgrep
 rofi
 rtkit
+satty
 sof-firmware
 stow
+superfile
 tinyxml
 tlp
 tlp-rdw

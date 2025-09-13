@@ -18,6 +18,7 @@ interval=0
 
 # load colors
 . ~/.config/chadwm/scripts/bar_themes/catppuccin
+
 cpu() {
     # Get the 1-minute load average (can be adjusted to 5 or 15 minutes)
     cpu_load=$(awk '{print $1}' /proc/loadavg)
@@ -83,7 +84,7 @@ for battery in /sys/class/power_supply/BAT?*; do
         *) exit 1 ;;
     esac
 
-    printf " $status%d%%" "$capacity"
+    printf " $status "
 done
 }
 brightness() {
@@ -98,15 +99,29 @@ volume() {
   vol_percent=$(echo "$vol_info" | awk '{printf "%d", $2 * 100}')
   is_muted=$(echo "$vol_info" | grep -q MUTED && echo "yes" || echo "no")
 
+
+  # If muted, set the muted icon
   if [ "$is_muted" = "yes" ]; then
-    icon="^c$maroon^󰝟 "  # Muted icon
+    icon="^c$pink^󰝟 "  # Muted icon
   else
-    icon="^c$pink^"  # Volume icon
+    # Select volume icon based on percentage
+    if [ "$vol_percent" -ge 80 ]; then
+      icon="^c$pink^"  # Full volume
+    elif [ "$vol_percent" -ge 40 ]; then
+      icon="^c$pink^󰕾"  # Medium-high volume
+    elif [ "$vol_percent" -gt 20 ]; then
+      icon="^c$pink^󰖀"  # Medium volume
+    elif [ "$vol_percent" -gt 0 ]; then
+      icon="^c$pink^󰕿"  # Low volume
+    else
+      icon="^c$pink^󰝟"  # Muted icon (if volume is zero)
+    fi
   fi
 
-  printf " $icon "
-  printf "^c$pink^%s%%\n" "$vol_percent "
+  # Display the icon without the percentage
+  printf " $icon  "
 }
+
 mic() {
     # Get microphone mute state using wpctl
      MIC_STATE=$(wpctl status | grep -q MUTED && echo "yes" || echo "no")
@@ -137,13 +152,14 @@ mem() {
   fi
 
   # Print the memory usage with color
-  printf "${color} %s/%s " "$used_mem" "$total_mem"
+  printf "${color}  %s/%s " "$used_mem" "$total_mem"
 }
 
 wlan() {
   local operstate signal strength icon color
 
   operstate=$(cat /sys/class/net/wl*/operstate 2>/dev/null)
+  current_connected=$(iwctl station wlan0 show | grep "Connected network" | sed 's/^[[:space:]]*Connected network[[:space:]]*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
   if [[ "$operstate" == "up" ]]; then
     signal=$(awk '/wl/ { print int($3 * 100 / 70) }' /proc/net/wireless 2>/dev/null)
@@ -163,18 +179,77 @@ wlan() {
       color="$teal"
     fi
 
-    printf "^c%s^ %s Connected " "$color" "$icon"
+    printf "^c%s^ %s   %s " "$color" "$icon" "$current_connected"
   else
-    printf "^c$red^ 󰤭 Disconnected "
+    printf "^c$red^ 󰤭 "
   fi
 }
 
+#bluetooth functions
+power_on() {
+    if bluetoothctl show | grep -q "Powered: yes"; then
+        return 0
+    else
+        return 1
+    fi
+}
+device_paired() {
+    device_info=$(bluetoothctl info "$1")
+    if echo "$device_info" | grep -q "Paired: yes"; then
+        echo "Paired: yes"
+        return 0
+    else
+        echo "Paired: no"
+        return 1
+    fi
+}
+device_connected() {
+    device_info=$(bluetoothctl info "$1")
+    if echo "$device_info" | grep -q "Connected: yes"; then
+        return 0
+    else
+        return 1
+    fi
+}
+bluetooth() {
+    if power_on; then
+        printf "^c$darkblue^ "
+
+        paired_devices_cmd="devices Paired"
+        # Check if an outdated version of bluetoothctl is used to preserve backwards compatibility
+        if (( $(echo "$(bluetoothctl version | cut -d ' ' -f 2) < 5.65" | bc -l) )); then
+            paired_devices_cmd="paired-devices"
+        fi
+
+        mapfile -t connected_devices < <(bluetoothctl devices Connected | grep Device | cut -d ' ' -f 2)
+        connected_devices_count=${#connected_devices[@]}
+        printf " %s" "$connected_devices_count"
+        # mapfile -t paired_devices < <(bluetoothctl $paired_devices_cmd | grep Device | cut -d ' ' -f 2)
+        # counter=0
+        # for device in "${paired_devices[@]}"; do
+        #     if device_connected "$device"; then
+        #         device_alias=$(bluetoothctl info "$device" | grep "Alias" | cut -d ' ' -f 2-)
+        #
+        #         if [ $counter -gt 0 ]; then
+        #             printf ", %d" "$device_alias"
+        #         else
+        #             printf " %d" "$device_alias"
+        #         fi
+        #
+        #         ((counter++))
+        #     fi
+        # done
+        printf "\n"
+    else
+        echo "^c$darkblue^󰂲 "
+    fi
+}
 clock() {
 
   printf "^c$lavender^  "
-  printf "^c$lavender^ $(date '+%a %d %b %Y')"
+  printf "^c$lavender^ $(date '+%a %d %b ')"
   printf "^c$blue^ 󱑆 "
-  printf "^c$blue^ $(date '+%H:%M:%S')"
+  printf "^c$blue^ $(date '+%H:%M')"
 }
 
 while true; do
@@ -182,5 +257,5 @@ while true; do
   [ $interval = 0 ] || [ $(($interval % 120)) = 0 ] && updates=$(pkg_updates)
   interval=$((interval + 1))
 
-  sleep 1 && xsetroot -name "$(battery) $(brightness) $(cpu) $(mem) $(wlan) $(mic) $(volume) $(clock)"
+  sleep 1 && xsetroot -name " $(brightness) $(cpu) $(mem) $(wlan) $(bluetooth) $(mic) $(volume) $(battery) $(clock)"
 done

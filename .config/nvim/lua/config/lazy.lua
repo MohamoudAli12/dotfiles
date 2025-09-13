@@ -81,7 +81,7 @@ require('lazy').setup {
           'WhoIsSethDaniel/mason-tool-installer.nvim',
           opts = {
             ensure_installed = {
-              'clangd', -- C/C++ LSP
+              -- 'clangd', -- C/C++ LSP
               'ruff', -- Ruff LSP (Python)
               'clang-format', -- Formatter for C/C++
               'stylua',

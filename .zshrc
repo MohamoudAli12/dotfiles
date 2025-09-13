@@ -82,7 +82,7 @@ plugins=(git)
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
-
+alias vim='nvim'
 # export MANPATH="/usr/local/man:$MANPATH"
 export PATH=~/dotfiles/statusbar:$PATH
 export PATH="$HOME/dotfiles/myscripts:$PATH"

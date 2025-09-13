@@ -38,7 +38,7 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 #define ICONSIZE 19   /* icon size */
 #define ICONSPACING 8 /* space between icon and title */
 
-static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font Mono:style:medium:size=36" };
+static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font:style:large:size=36" };
 #define STATUSBAR "dwmblocks"
 // theme
 #include "themes/catppuccin.h"
@@ -63,7 +63,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static char *tags[] = {" ", " ", " ", " "};
+static char *tags[] = {" ", " " ," ", " ", " "};
 
 static const char* eww[] = { "eww", "open" , "eww", NULL };
 
@@ -87,9 +87,10 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
-    // { "ghostty",     NULL,       NULL,       1<<0,            0,           0,           -1 },
-    { "LibreWolf",   NULL,       NULL,       1 << 1,          0,           0,           -1 },
-    { "KiCad",       NULL,       NULL,       1<<2,            0,           0,           -1 },
+    { "ghostty",     NULL,       NULL,       0,               0,           0,           -1 },
+    { "librewolf",   NULL,       NULL,       1<<2,            0,           0,           -1 },
+    { "kicad",       NULL,       NULL,       1<<3,            0,           1,           -1 },
+    { "octave",      NULL,       NULL,       1<<4,            0,           0,           -1 },
 };
 
 /* layout(s) */
@@ -148,21 +149,24 @@ static const Key keys[] = {
 
     // screenshot fullscreen and cropped
     {MODKEY|ControlMask,                XK_Print,       spawn,
-        SHCMD("maim -s | xclip -selection clipboard -t image/png")},
+        SHCMD("maim -s | xclip -selection clipboard -t image/png  && notify-send '󰄄 Screenshot copied to clipboard'")},
     {MODKEY,                            XK_Print,       spawn,
-        SHCMD("maim -s ~/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png")},
+        SHCMD("maim -s | satty --filename - --actions-on-enter save-to-file --output-filename ~/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png")},
 
     { MODKEY,                           XK_d,       spawn,          SHCMD("rofi -show drun") },
     { MODKEY,                           XK_Return,  spawn,          SHCMD("ghostty")},
     { MODKEY,                           XK_space,   spawn,          SHCMD("lock.sh")},
     { MODKEY,                           XK_w,       spawn,          SHCMD("cycle_wall.sh")},
     { MODKEY,                           XK_n,       spawn,          SHCMD("wifi.sh")},
+    { MODKEY,                           XK_b,       spawn,          SHCMD("bluetooth.sh")},
+    { MODKEY,                           XK_f,       spawn,          SHCMD("ghostty -e spf")},
+    { MODKEY,                           XK_v,       spawn,          SHCMD("ghostty -e nvim")},
 
     // toggle stuff
-    { MODKEY,                           XK_b,       togglebar,      {0} },
+    { MODKEY|ControlMask,               XK_b,       togglebar,      {0} },
     { MODKEY|ControlMask,               XK_t,       togglegaps,     {0} },
     { MODKEY|ShiftMask,                 XK_space,   togglefloating, {0} },
-    { MODKEY,                           XK_f,       togglefullscr,  {0} },
+    { MODKEY|ControlMask,               XK_f,       togglefullscr,  {0} },
 
     { MODKEY|ControlMask,               XK_w,       tabmode,        { -1 } },
     { MODKEY,                           XK_j,       focusstack,     {.i = +1 } },

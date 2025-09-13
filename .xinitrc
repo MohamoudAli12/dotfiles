@@ -1,7 +1,7 @@
 #!/bin/bash
 
 xrdb -merge ~/.Xresources &
-#xrandr --output eDP-1 --dpi 192 --scale 1x1
+# xrandr  --dpi 192
 export GDK_SCALE=2
 export GDK_DPI_SCALE=1
 export QT_AUTO_SCREEN_SCALE_FACTOR=1
@@ -14,7 +14,7 @@ dunst &
 # Set idle time to 10 minutes
 xset s 600 600
 xset dpms 600 600 600
-numlockx &
+numlockx 
 xss-lock ~/myscripts/lock.sh &
 ~/myscripts/auto_suspend.sh &
 

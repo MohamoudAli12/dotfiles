@@ -2,3 +2,5 @@
 .config/dconf/*
 .config/pulse/*
 .config/chadwm/chadwm/.cache/*
+.config/kicad/9.0/kicad.json
+.config/dconf/*
