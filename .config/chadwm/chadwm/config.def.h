@@ -87,10 +87,11 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */
-    { "ghostty",     NULL,       NULL,       0,               0,           0,           -1 },
-    { "librewolf",   NULL,       NULL,       1<<2,            0,           0,           -1 },
-    { "kicad",       NULL,       NULL,       1<<3,            0,           1,           -1 },
-    { "octave",      NULL,       NULL,       1<<4,            0,           0,           -1 },
+    { "ghostty",     NULL,          NULL,       0,               0,           0,           -1 },
+    { "superfile",   NULL,          NULL,       1<<1,            0,           0,           -1 },
+    { "librewolf",   NULL,          NULL,       1<<2,            0,           0,           -1 },
+    { "KiCad",       NULL,          NULL,       1<<3,            0,           0,           -1 },
+    { "octave",      NULL,          NULL,       1<<4,            0,           0,           -1 },
 };
 
 /* layout(s) */
@@ -161,6 +162,9 @@ static const Key keys[] = {
     { MODKEY,                           XK_b,       spawn,          SHCMD("bluetooth.sh")},
     { MODKEY,                           XK_f,       spawn,          SHCMD("ghostty -e spf")},
     { MODKEY,                           XK_v,       spawn,          SHCMD("ghostty -e nvim")},
+    { MODKEY|ControlMask,               XK_k,       spawn,          SHCMD("kicad")},
+    { MODKEY|ControlMask,               XK_l,       spawn,          SHCMD("librewolf")},
+    { MODKEY,                           XK_o,       spawn,          SHCMD("octave --gui")},
 
     // toggle stuff
     { MODKEY|ControlMask,               XK_b,       togglebar,      {0} },

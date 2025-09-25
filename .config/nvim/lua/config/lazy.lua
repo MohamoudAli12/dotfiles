@@ -53,7 +53,8 @@ require('lazy').setup {
         require('nvim_comment').setup { create_mappings = false }
       end,
     },
-
+    { 'savq/melange-nvim' },
+    { 'sheerun/vim-polyglot' },
     { 'nvim-treesitter/nvim-treesitter', branch = 'master', lazy = false, build = ':TSUpdate' },
     {
       'folke/lazydev.nvim',

@@ -2,13 +2,14 @@ acpi
 base
 base-devel
 bc
-blueman
+bluez
 bluez-utils
 boost
 brightnessctl
 cgal
 cmake
 cython
+dotnet-sdk
 dunst
 efibootmgr
 fast_float
@@ -18,6 +19,7 @@ feh
 fzf
 ghostty
 git
+glfw
 grub
 gst-plugin-pipewire
 htop
@@ -58,6 +60,7 @@ satty
 sof-firmware
 stow
 superfile
+timeshift
 tinyxml
 tlp
 tlp-rdw
@@ -66,6 +69,7 @@ tree
 ttf-jetbrains-mono-nerd
 ttf-meslo-nerd
 ufw
+vulkan-headers
 wireplumber
 xclip
 xf86-video-vesa
@@ -119,6 +123,7 @@ xorg-xwininfo
 xorg-xwud
 xprintidle
 xss-lock
+yaml-cpp
 yay
 yay-debug
 zathura

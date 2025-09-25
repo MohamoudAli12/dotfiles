@@ -18,12 +18,6 @@ vim.opt.sidescrolloff = 8 --minimum number of columns to keep above and below th
 vim.g.have_nerd_font = true
 vim.opt.guicursor =
   'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175'
--- Center screen when jumping
-vim.keymap.set('n', 'n', 'nzzzv', { desc = 'Next search result (centered)' })
-vim.keymap.set('n', 'N', 'Nzzzv', { desc = 'Previous search result (centered)' })
-vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Half page down (centered)' })
-vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Half page up (centered)' })
-
 -- Y to EOL
 vim.keymap.set('n', 'Y', 'y$', { desc = 'Yank to end of line' })
 -- return to last edit position when opening files

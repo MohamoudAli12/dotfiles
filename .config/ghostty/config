@@ -42,9 +42,9 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 window-decoration=server
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 window-padding-balance = true
 #font-family = MesloLGS Nerd Font Mono
-font-family = JetBrainsMono Nerd Font Mono
+font-family = JetBrainsMono Nerd Font
 shell-integration = zsh
 
