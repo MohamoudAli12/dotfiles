@@ -152,7 +152,7 @@ mem() {
   fi
 
   # Print the memory usage with color
-  printf "${color}  %s/%s " "$used_mem" "$total_mem"
+  printf "${color}  %s/%s " "$used_mem" "$total_mem"
 }
 
 wlan() {

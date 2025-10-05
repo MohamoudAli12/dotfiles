@@ -17,7 +17,7 @@
 #   Arch repositories: rofi, bluez-utils (contains bluetoothctl), bc
 
 # Constants
-divider="---------"
+divider="*************************"
 goback="Back"
 
 # Checks if bluetooth controller is powered on
@@ -61,6 +61,7 @@ toggle_scan() {
         bluetoothctl scan off
         show_menu
     else
+        notify-send "Bluetooth" "Scanning for Bluetooth devices"
         bluetoothctl --timeout 5 scan on
         echo "Scanning..."
         show_menu

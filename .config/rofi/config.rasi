@@ -1,7 +1,7 @@
 configuration{
     modi: "run,drun,window";
     lines: 5;
-    font: "JetBrainsMono Nerd Font Mono 30";
+    font: "JetBrainsMono Nerd Font 30";
     show-icons: true;
     icon-theme: "Paper Mono";
     terminal: "ghostty";
@@ -12,7 +12,7 @@ configuration{
     display-drun: " 󱓟  Launch ";
 }
 
-@theme "~/.config/rofi/themes/catppuccin-mocha"
+@theme "~/.config/rofi/themes/12bit_rainbow"
 
 element-text, element-icon , mode-switcher {
     background-color: inherit;
