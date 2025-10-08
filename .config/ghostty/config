@@ -43,7 +43,7 @@
 # resize-overlay-duration = 4s 200ms
 window-padding-y = 0
 window-padding-x = 0 
-window-decoration=server
+window-decoration=false
 theme = 12-bit Rainbow
 window-padding-balance = true
 #font-family = MesloLGS Nerd Font Mono

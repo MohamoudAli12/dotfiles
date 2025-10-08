@@ -1,7 +1,7 @@
 * {
     bg-col: #040404;            /* Background color */
     bg-col-light: #606060;      /* Selection background */
-    border-col: #685656;        /* Border / separator color */
+    border-col: #3060b0;        /* Border / separator color */
     selected-col: #606060;      /* Selected item background */
     blue: #0090c0;              /* Accent (mapped from palette 6 or 12/14) */
     fg-col: #feffff;            /* Foreground text color */
