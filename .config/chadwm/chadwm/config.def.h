@@ -41,7 +41,7 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font:style:large:size=36" };
 #define STATUSBAR "dwmblocks"
 // theme
-#include "themes/catppuccin.h"
+#include "themes/12bit_rainbow.h"
 
 static const char *colors[][3]      = {
     /*                     fg       bg      border */
