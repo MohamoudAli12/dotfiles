@@ -35,7 +35,7 @@ static const char *mutemic[] = { "/usr/bin/wpctl", "set-mute",   "@DEFAULT_AUDIO
 static const char *light_up[] = {"/usr/bin/brightnessctl", "set", "+5%", NULL};
 static const char *light_down[] = {"/usr/bin/brightnessctl", "set", "5%-", NULL};
 static const int new_window_attach_on_end = 0; /*  1 means the new window will attach on the end; 0 means the new window will attach on the front,default is front */
-#define ICONSIZE 19   /* icon size */
+#define ICONSIZE 20   /* icon size */
 #define ICONSPACING 8 /* space between icon and title */
 
 static const char *fonts[]          = {"Iosevka:style:medium:size=36" ,"JetBrainsMono Nerd Font:style:large:size=36" };
@@ -56,6 +56,7 @@ static const char *colors[][3]      = {
     [SchemeTag3]       = { orange,  black,  black },
     [SchemeTag4]       = { green,   black,  black },
     [SchemeTag5]       = { pink,    black,  black },
+    [SchemeTag6]       = { gray2,    black,  black },
     [SchemeLayout]     = { green,   black,  black },
     [SchemeBtnPrev]    = { green,   black,  black },
     [SchemeBtnNext]    = { yellow,  black,  black },
@@ -63,7 +64,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static char *tags[] = {" ", " " ," ", " ", " "};
+static char *tags[] = {" ", " ", " ", " ", " ", "󰇮 "};
 
 static const char* eww[] = { "eww", "open" , "eww", NULL };
 
@@ -73,7 +74,7 @@ static const Launcher launchers[] = {
 };
 
 static const int tagschemes[] = {
-    SchemeTag1, SchemeTag2, SchemeTag3, SchemeTag4, SchemeTag5
+    SchemeTag1, SchemeTag2, SchemeTag3, SchemeTag4, SchemeTag5,SchemeTag6
 };
 
 static const unsigned int ulinepad      = 5; /* horizontal padding between the underline and tag */
@@ -92,9 +93,12 @@ static const Rule rules[] = {
     { "librewolf",   NULL,          NULL,       1<<2,            0,           0,           -1 },
     { "KiCad",       NULL,          NULL,       1<<3,            0,           0,           -1 },
     { "octave",      NULL,          NULL,       1<<4,            0,           0,           -1 },
+    { "Mail",        NULL,          NULL,       1<<6,            0,           0,           -1 },
 };
-
-/* layout(s) */
+/* window swallowing */
+static const int swaldecay = 3;       /* layout(s) */
+static const int swalretroactive = 1; 
+static const char swalsymbol[] = "󰼢 ";
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
@@ -165,7 +169,9 @@ static const Key keys[] = {
     { MODKEY|ControlMask,               XK_k,       spawn,          SHCMD("kicad")},
     { MODKEY|ControlMask,               XK_l,       spawn,          SHCMD("librewolf")},
     { MODKEY,                           XK_o,       spawn,          SHCMD("octave --gui")},
+    { MODKEY|ControlMask,               XK_m,       spawn,          SHCMD("thunderbird")},
 
+    { MODKEY,                           XK_u,      swalstopsel,    {0} },
     // toggle stuff
     { MODKEY|ControlMask,               XK_b,       togglebar,      {0} },
     { MODKEY|ControlMask,               XK_t,       togglegaps,     {0} },
@@ -288,6 +294,8 @@ static const Button buttons[] = {
     * into a floating position).
     */
     { ClkClientWin,         MODKEY,         Button1,        moveorplace,    {.i = 0} },
+  { ClkClientWin,         MODKEY|ShiftMask, Button1,      swalmouse,      {0} },
+
     { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
     { ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
     { ClkClientWin,         ControlMask,    Button1,        dragmfact,      {0} },

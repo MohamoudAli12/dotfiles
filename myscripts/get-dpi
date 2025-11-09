@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# Copyright 2019  Luke Shumaker
+
+sanitize() {
+	[[ $? == 0 ]] || return $?
+	printf '%g\n' "$@"
+}
+
+calc() {
+	[[ $? == 0 ]] || return $?
+	sanitize "$(bc <<<"scale=6; $1")"
+}
+
+errusage() {
+	if (( $# > 0 )); then
+		printf '%s: %s\n' "${0##*/}" "$(printf "$@")" >&2
+	fi
+	printf "Try '%s --help' for more information.\n" "${0##*/}" >&2
+	exit 2
+}
+
+usage() {
+	printf 'Usage: %s [OPTIONS]\n' "${0##*/}"
+	printf "Report DPI settings\n"
+	echo
+	printf 'OPTIONS:\n'
+	printf '  -h, --help      Show this message\n'
+	printf '  --device-geometry=OUTPUT=<X>x<Y>[x<Z>]\n'
+	printf '                  Override the hardware-reported physical\n'
+	printf '                  dimensions for the X11 output OUTPUT; X, Y,\n'
+	printf '                  and Z must either have a suffix of "in" or\n'
+	printf '                  "mm", or be "auto"; providing Z causes the\n'
+	printf '                  the dimensions to be scaled to a reference\n'
+	printf '                  viewing distance of 28in (as described in\n'
+	printf '                  [CSS3-values])\n'
+	echo
+	printf '[CSS3-values]: https://www.w3.org/TR/css3-values/#reference-pixel\n'
+}
+
+set -euE -o pipefail
+args=$(getopt -n "${0##*/}" -o 'hn' -l 'help,device-geometry:' -- "$@") || errusage
+eval "set -- $args"
+
+declare -A arg_device_geometry
+while (( $# > 0 )); do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--device-geometry)
+			if [[ "$2" != *=* ]]; then
+				errusage 'Invalid --device-geometry=%q' "$2"
+			fi
+			device=${2%=*}
+			geometry=${2##*=}
+			re_dim='([0-9]+(.[0-9]+)?(in|mm)|auto)'
+			re_geo="^${re_dim}x${re_dim}(x${re_dim})?\$"
+			if ! [[ "$geometry" =~ $re_geo ]]; then
+				errusage 'Invalid --device-geometry=%q' "$2"
+			fi
+			arg_device_geometry["$device"]=$geometry
+			shift 2
+			;;
+		--)
+			shift
+			break
+			;;
+	esac
+done
+if (( $# > 0 )); then
+	errusage
+fi
+
+# Xft
+dpi=$(xrdb -query|sed -n 's/^Xft\.dpi:\s*//p')
+[[ -n "$dpi" ]] || dpi=96x96
+xft_xdpi=$(sanitize "${dpi%%x*}")
+xft_ydpi=$(sanitize "${dpi#*x}")
+echo X11-resources Xft ${xft_xdpi}x${xft_ydpi}
+
+# GDK
+gdk_scale=$(sanitize "${GDK_SCALE:-1}")
+dpi=$(calc "${gdk_scale} * 96")
+echo environment GDK-widget ${dpi}x${dpi}
+
+gdk_dpi_scale=$(sanitize "${GDK_DPI_SCALE:-1}")
+dpi=$(calc "${gdk_scale} * ${gdk_dpi_scale} * ${xft_xdpi}")
+echo environment+X11-resources GDK-text ${dpi}x${dpi}
+
+# RandR
+(
+	export LC_ALL=C
+	xrandr | sed -rn -e 's@(.*) connected( .*)? ([0-9]+)x([0-9]+)\+([0-9]+)\+([0-9]+)( .*)? ([0-9]+)mm x ([0-9]+)mm( .*)?@\1 \3 \4 \8 \9@p' -e 's@^   ([0-9]+)x([0-9]+)i? .*\*.*@ \1 \2@p' | sed '/^\S/{ N; s/\n//; }'
+	#                      1             2      3        4         5         6       7      8            9         10                                 1        2
+	#                      `-outputName  |      `-fb_xpx `-fb_ypx  `-fb_xoff `-fb_yoff      `- hw_xmm    `- hw_ymm |                                  `-hw_xpx `-hw_ypx
+	#                                    `-discard                                  `- discard                     `- discard
+) | while read -r output fb_xpx fb_ypx hw_xmm hw_ymm hw_xpx hw_ypx; do
+	if [[ -n "${arg_device_geometry["$output"]:-}" ]]; then
+		IFS=x read override_x override_y override_z <<<"${arg_device_geometry["$output"]}"
+		case "$override_x" in
+			*mm) override_xmm="$(sanitize "${override_x%mm}")";;
+			*in) override_xmm="$(calc "$(sanitize "${override_x%in}")*25.4")";;
+			auto) override_xmm="$hw_xmm";;
+		esac
+		case "$override_y" in
+			*mm) override_ymm="$(sanitize "${override_y%mm}")";;
+			*in) override_ymm="$(calc "$(sanitize "${override_y%in}")*25.4")";;
+			auto) override_ymm="$hw_ymm";;
+		esac
+		if [[ "$override_z" == '' ||  "$override_z" == 'auto' ]]; then
+			hw_xmm=$override_xmm
+			hw_ymm=$override_ymm
+		else
+			# algorithm from https://www.w3.org/TR/css3-values/#reference-pixel
+			ref_zmm=711.2 # 28in
+			case "$override_z" in
+				*mm) override_zmm="$(sanitize "${override_z%mm}")";;
+				*in) override_zmm="$(calc "$(sanitize "${override_z%in}")*25.4")";;
+			esac
+			hw_xmm=$(calc "(${override_xmm}*${ref_zmm})/${override_zmm}")
+			hw_ymm=$(calc "(${override_ymm}*${ref_zmm})/${override_zmm}")
+		fi
+	fi
+
+	hw_xdpi=$(calc "($hw_xpx*25.4)/$hw_xmm")
+	hw_ydpi=$(calc "($hw_ypx*25.4)/$hw_ymm")
+
+	fb_xdpi=$(calc "($fb_xpx*25.4)/$hw_xmm")
+	fb_ydpi=$(calc "($fb_ypx*25.4)/$hw_ymm")
+
+	echo X11-RandR-hw $output ${hw_xdpi}x${hw_ydpi}
+	echo X11-RandR-fb $output ${fb_xdpi}x${fb_ydpi}
+done

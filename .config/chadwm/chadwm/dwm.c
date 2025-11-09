@@ -90,6 +90,7 @@ enum {
   CurNormal,
   CurResize,
   CurMove,
+  CurSwal,
   CurResizeHorzArrow,
   CurResizeVertArrow,
   CurLast
@@ -104,6 +105,7 @@ enum {
   SchemeTag3,
   SchemeTag4,
   SchemeTag5,
+  SchemeTag6,
   SchemeLayout,
   TabSel,
   TabNorm,
@@ -160,7 +162,11 @@ enum showtab_modes {
   showtab_nmodes,
   showtab_always
 }; /* tab modes */
-
+enum {
+  ClientRegular =1,
+  ClientSwallowee,
+  ClientSwallower
+};
 typedef union {
   int i;
   unsigned int ui;
@@ -192,6 +198,7 @@ struct Client {
 	int beingmoved;
   Client *next;
   Client *snext;
+  Client *swer;
   Monitor *mon;
   Window win;
 };
@@ -217,7 +224,28 @@ typedef struct {
   int isfloating;
   int monitor;
 } Rule;
+typedef struct Swallow Swallow;
+struct Swallow {
+	/* Window class name, instance name (WM_CLASS) and title
+	 * (WM_NAME/_NET_WM_NAME, latter preferred if it exists). An empty string
+	 * implies a wildcard as per strstr(). */
+	char class[256];
+	char inst[256];
+	char title[256];
 
+	/* Used to delete swallow instance after 'swaldecay' windows were mapped
+	 * without the swallow having been consumed. 'decay' keeps track of the
+	 * remaining "charges". */
+	int decay;
+
+	/* The swallower, i.e. the client which will swallow the next mapped window
+	 * whose filters match the above properties. */
+	Client *client;
+
+	/* Linked list of registered swallow instances. */
+	Swallow *next;
+};
+ 
 typedef struct Systray Systray;
 struct Systray {
   Window win;
@@ -261,6 +289,7 @@ static void drawtab(Monitor *m);
 static void drawtabs(void);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
+static int fakesignal(void);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
@@ -325,6 +354,16 @@ static void showhide(Client *c);
 static void showtagpreview(int tag);
 static void sigstatusbar(const Arg *arg);
 static void spawn(const Arg *arg);
+static void swal(Client *swer, Client *swee, int manage);
+static void swalreg(Client *c, const char* class, const char* inst, const char* title);
+static void swaldecayby(int decayby);
+static void swalmanage(Swallow *s, Window w, XWindowAttributes *wa);
+static Swallow *swalmatch(Window w);
+static void swalmouse(const Arg *arg);
+static void swalrm(Swallow *s);
+static void swalunreg(Client *c);
+static void swalstop(Client *c, Client *root);
+static void swalstopsel(const Arg *unused);
 static void switchtag(void);
 static Monitor *systraytomon(Monitor *m);
 static void tabmode(const Arg *arg);
@@ -359,6 +398,7 @@ static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
 static Client *wintoclient(Window w);
+static int wintoclient2(Window w, Client **pc, Client **proot);
 static Monitor *wintomon(Window w);
 static Client *wintosystrayicon(Window w);
 static int xerror(Display *dpy, XErrorEvent *ee);
@@ -403,6 +443,7 @@ static Clr **scheme, clrborder;
 static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
+static Swallow *swallows;
 static Window root, wmcheckwin;
 
 #define hiddenWinStackMax 100
@@ -941,7 +982,9 @@ void configurerequest(XEvent *e) {
   XConfigureRequestEvent *ev = &e->xconfigurerequest;
   XWindowChanges wc;
 
-  if ((c = wintoclient(ev->window))) {
+  switch(wintoclient2(ev->window, &c, NULL)){
+  case ClientRegular:
+  case ClientSwallowee:
     if (ev->value_mask & CWBorderWidth)
       c->bw = ev->border_width;
     else if (c->isfloating || !selmon->lt[selmon->sellt]->arrange) {
@@ -973,7 +1016,11 @@ void configurerequest(XEvent *e) {
         XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
     } else
       configure(c);
-  } else {
+    break;
+    case ClientSwallower:
+      configure(c);
+      break;
+    default:
     wc.x = ev->x;
     wc.y = ev->y;
     wc.width = ev->width;
@@ -982,6 +1029,7 @@ void configurerequest(XEvent *e) {
     wc.sibling = ev->above;
     wc.stack_mode = ev->detail;
     XConfigureWindow(dpy, ev->window, ev->value_mask, &wc);
+    break;
   }
   XSync(dpy, False);
 }
@@ -1046,12 +1094,26 @@ void cyclelayout(const Arg *arg) {
 }
 
 void destroynotify(XEvent *e) {
-  Client *c;
+  Client *c, *swee, *root;
   XDestroyWindowEvent *ev = &e->xdestroywindow;
 
-  if ((c = wintoclient(ev->window)))
+  switch (wintoclient2(ev->window, &c, &root)){
+  case ClientRegular: 
     unmanage(c, 1);
-  else if ((c = wintosystrayicon(ev->window))) {
+  break;
+  case ClientSwallowee:
+      swalstop(c,NULL);
+      unmanage(c,1);
+      break;
+  case ClientSwallower:
+      swalstop(c,root);
+      for(swee=root; swee->swer !=c; swee=swee->swer);
+      swee->swer = NULL;
+      free(c);
+    updateclientlist();
+    break;
+  }
+  if ((c = wintosystrayicon(ev->window))) {
     removesystrayicon(c);
     resizebarwin(selmon);
     updatesystray();
@@ -1568,6 +1630,11 @@ void drawbar(Monitor *m) {
   w = TEXTW(m->ltsymbol);
   drw_setscheme(drw, scheme[SchemeLayout]);
   x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+	/* Draw swalsymbol next to ltsymbol. */
+	if (m->sel && m->sel->swer) {
+		w = TEXTW(swalsymbol);
+		x = drw_text(drw, x, 0, w, bh, lrpad / 2, swalsymbol, 0);
+	}
 
   	for (i = 0; i < LENGTH(launchers); i++)
 	{
@@ -1783,6 +1850,80 @@ void expose(XEvent *e) {
     if (m == selmon)
       updatesystray();
   }
+}
+int
+fakesignal(void)
+{
+	/* Command syntax: <PREFIX><COMMAND>[<SEP><ARG>]... */
+	static const char sep[] = "###";
+	static const char prefix[] = "#!";
+
+	size_t numsegments, numargs;
+	char rootname[256];
+	char *segments[16] = {0};
+
+	/* Get root name, split by separator and find the prefix */
+	if (!gettextprop(root, XA_WM_NAME, rootname, sizeof(rootname))
+		|| strncmp(rootname, prefix, sizeof(prefix) - 1)) {
+		return 0;
+	}
+	numsegments = split(rootname + sizeof(prefix) - 1, sep, segments, sizeof(segments));
+	numargs = numsegments - 1; /* number of arguments to COMMAND */
+
+	if (!strcmp(segments[0], "swalreg")) {
+		/* Params: windowid, [class], [instance], [title] */
+		Window w;
+		Client *c;
+
+		if (numargs >= 1) {
+			w = strtoul(segments[1], NULL, 0);
+			switch (wintoclient2(w, &c, NULL)) {
+			case ClientRegular: /* fallthrough */
+			case ClientSwallowee:
+				swalreg(c, segments[2], segments[3], segments[4]);
+				break;
+			}
+		}
+	}
+	else if (!strcmp(segments[0], "swal")) {
+		/* Params: swallower's windowid, swallowee's window-id */
+		Client *swer, *swee;
+		Window winswer, winswee;
+		int typeswer, typeswee;
+
+		if (numargs >= 2) {
+			winswer = strtoul(segments[1], NULL, 0);
+			typeswer = wintoclient2(winswer, &swer, NULL);
+			winswee = strtoul(segments[2], NULL, 0);
+			typeswee = wintoclient2(winswee, &swee, NULL);
+			if ((typeswer == ClientRegular || typeswer == ClientSwallowee)
+				&& (typeswee == ClientRegular || typeswee == ClientSwallowee))
+				swal(swer, swee, 0);
+		}
+	}
+	else if (!strcmp(segments[0], "swalunreg")) {
+		/* Params: swallower's windowid */
+		Client *swer;
+		Window winswer;
+
+		if (numargs == 1) {
+			winswer = strtoul(segments[1], NULL, 0);
+			if ((swer = wintoclient(winswer)))
+				swalunreg(swer);
+		}
+	}
+	else if (!strcmp(segments[0], "swalstop")) {
+		/* Params: swallowee's windowid */
+		Client *swee;
+		Window winswee;
+
+		if (numargs == 1) {
+			winswee = strtoul(segments[1], NULL, 0);
+			if ((swee = wintoclient(winswee)))
+				swalstop(swee, NULL);
+		}
+	}
+	return 1;
 }
 
 void focus(Client *c) {
@@ -2191,7 +2332,8 @@ void mappingnotify(XEvent *e) {
 void maprequest(XEvent *e) {
   static XWindowAttributes wa;
   XMapRequestEvent *ev = &e->xmaprequest;
-  Client *i;
+  Client *i, *swee, *root, *c;
+  Swallow *s;
   if ((i = wintosystrayicon(ev->window))) {
     sendevent(i->win, netatom[Xembed], StructureNotifyMask, CurrentTime,
               XEMBED_WINDOW_ACTIVATE, 0, systray->win, XEMBED_EMBEDDED_VERSION);
@@ -2201,8 +2343,29 @@ void maprequest(XEvent *e) {
 
   if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
     return;
-  if (!wintoclient(ev->window))
-    manage(ev->window, &wa);
+  switch (wintoclient2(ev->window, &c, &root)) {
+	case ClientRegular: /* fallthrough */
+	case ClientSwallowee:
+		/* Regulars and swallowees are always mapped. Nothing to do. */
+		break;
+	case ClientSwallower:
+		/* Remapping a swallower will simply stop the swallow. */
+		for (swee = root; swee->swer != c; swee = swee->swer);
+		swalstop(swee, root);
+		break;
+	default:
+		/* No client is managing the window. See if any swallows match. */
+		if ((s = swalmatch(ev->window)))
+			swalmanage(s, ev->window, &wa);
+		else
+			manage(ev->window, &wa);
+		break;
+	}
+
+	/* Reduce decay counter of all swallow instances. */
+	if (swaldecay)
+		swaldecayby(1);
+
 }
 
 void
@@ -2498,6 +2661,7 @@ void pop(Client *c) {
 void propertynotify(XEvent *e) {
   Client *c;
   Window trans;
+  Swallow *s;
   XPropertyEvent *ev = &e->xproperty;
 
   if ((c = wintosystrayicon(ev->window))) {
@@ -2509,9 +2673,10 @@ void propertynotify(XEvent *e) {
     resizebarwin(selmon);
     updatesystray();
   }
-  if ((ev->window == root) && (ev->atom == XA_WM_NAME))
-    updatestatus();
-  else if (ev->state == PropertyDelete)
+  	if ((ev->window == root) && (ev->atom == XA_WM_NAME)) {
+		if (!fakesignal())
+			updatestatus();
+	} else if (ev->state == PropertyDelete) 
     return; /* ignore */
   else if ((c = wintoclient(ev->window))) {
     switch (ev->atom) {
@@ -2540,6 +2705,11 @@ void propertynotify(XEvent *e) {
 			updateicon(c);
 			if (c == c->mon->sel)
 				drawbar(c->mon);
+      
+			if (swalretroactive && (s = swalmatch(c->win)))
+      {
+        swal(s->client, c, 0);
+      }
 		}
 
     if (ev->atom == netatom[NetWMWindowType])
@@ -3021,6 +3191,7 @@ void setup(void) {
   cursor[CurResize] = drw_cur_create(drw, XC_sizing);
   cursor[CurMove] = drw_cur_create(drw, XC_fleur);
   cursor[CurResizeHorzArrow] = drw_cur_create(drw, XC_sb_h_double_arrow);
+	cursor[CurSwal] = drw_cur_create(drw, XC_bottom_side);
   cursor[CurResizeVertArrow] = drw_cur_create(drw, XC_sb_v_double_arrow);
   /* init appearance */
   scheme = ecalloc(LENGTH(colors) + 1, sizeof(Clr *));
@@ -3152,6 +3323,325 @@ void spawn(const Arg *arg) {
     execvp(((char **)arg->v)[0], (char **)arg->v);
     die("dwm: execvp '%s' failed:", ((char **)arg->v)[0]);
   }
+}
+/*
+ * Perform immediate swallow of client 'swee' by client 'swer'. 'manage' shall
+ * be set if swal() is called from swalmanage(). 'swer' and 'swee' must be
+ * regular or swallowee, but not swallower.
+ */
+void
+swal(Client *swer, Client *swee, int manage)
+{
+	Client *c, **pc;
+	int sweefocused = selmon->sel == swee;
+
+	/* No self-swallowing! */
+	if (swer == swee)
+		return;
+
+	/* Remove any swallows registered for the swer. Asking a swallower to
+	 * swallow another window is ambiguous and is thus avoided altogether. In
+	 * contrast, a swallowee can swallow in a well-defined manner by attaching
+	 * to the head of the swallow chain. */
+	if (!manage)
+		swalunreg(swer);
+
+	/* Disable fullscreen prior to swallow. Swallows involving fullscreen
+	 * windows produces quirky artefacts such as fullscreen terminals or tiled
+	 * pseudo-fullscreen windows. */
+	setfullscreen(swer, 0);
+	setfullscreen(swee, 0);
+
+	/* Swap swallowee into client and focus lists. Keeps current focus unless
+	 * the swer (which gets unmapped) is focused in which case the swee will
+	 * receive focus. */
+	detach(swee);
+	for (pc = &swer->mon->clients; *pc && *pc != swer; pc = &(*pc)->next);
+	*pc = swee;
+	swee->next = swer->next;
+	detachstack(swee);
+	for (pc = &swer->mon->stack; *pc && *pc != swer; pc = &(*pc)->snext);
+	*pc = swee;
+	swee->snext = swer->snext;
+	swee->mon = swer->mon;
+	if (sweefocused) {
+		detachstack(swee);
+		attachstack(swee);
+		selmon = swer->mon;
+	}
+	swee->tags = swer->tags;
+	swee->isfloating = swer->isfloating;
+	for (c = swee; c->swer; c = c->swer);
+	c->swer = swer;
+
+	/* Configure geometry params obtained from patches (e.g. cfacts) here. */
+	swee->cfact = swer->cfact;
+
+	/* ICCCM 4.1.3.1 */
+	setclientstate(swer, WithdrawnState);
+	if (manage)
+		setclientstate(swee, NormalState);
+
+	if (swee->isfloating || !swee->mon->lt[swee->mon->sellt]->arrange)
+		XRaiseWindow(dpy, swee->win);
+	resize(swee, swer->x, swer->y, swer->w, swer->h, 0);
+
+	focus(NULL);
+	arrange(NULL);
+	if (manage)
+		XMapWindow(dpy, swee->win);
+	XUnmapWindow(dpy, swer->win);
+	restack(swer->mon);
+}
+
+/*
+ * Register a future swallow with swallower 'c'. 'class', 'inst' and 'title'
+ * shall point null-terminated strings and must not be NULL. If an already
+ * existing swallow instance targets 'c' its filters are updated and no new
+ * swallow instance is created. 'c' may be ClientRegular or ClientSwallowee.
+ * Complement to swalrm().
+ */
+void
+swalreg(Client *c, const char *class, const char *inst, const char *title)
+{
+	Swallow *s;
+
+	if (!c)
+		return;
+
+	/* Update existing swallow */
+	for (s = swallows; s; s = s->next) {
+		if (s->client == c) {
+			strncpy(s->class, class, sizeof(s->class) - 1);
+			strncpy(s->inst, inst, sizeof(s->inst) - 1);
+			strncpy(s->title, title, sizeof(s->title) - 1);
+			s->decay = swaldecay;
+
+			/* Only one swallow per client. May return after first hit. */
+			return;
+		}
+	}
+
+	s = ecalloc(1, sizeof(Swallow));
+	s->decay = swaldecay;
+	s->client = c;
+	strncpy(s->class, class, sizeof(s->class) - 1);
+	strncpy(s->inst, inst, sizeof(s->inst) - 1);
+	strncpy(s->title, title, sizeof(s->title) - 1);
+
+	s->next = swallows;
+	swallows = s;
+}
+
+/*
+ * Decrease decay counter of all registered swallows by 'decayby' and remove any
+ * swallow instances whose counter is less than or equal to zero.
+ */
+void
+swaldecayby(int decayby)
+{
+	Swallow *s, *t;
+
+	for (s = swallows; s; s = t) {
+		s->decay -= decayby;
+		t = s->next;
+		if (s->decay <= 0)
+			swalrm(s);
+	}
+}
+
+/*
+ * Window configuration and client setup for new windows which are to be
+ * swallowed immediately. Pendant to manage() for such windows.
+ */
+void
+swalmanage(Swallow *s, Window w, XWindowAttributes *wa)
+{
+	Client *swee, *swer;
+	XWindowChanges wc;
+
+	swer = s->client;
+	swalrm(s);
+
+	/* Perform bare minimum setup of a client for window 'w' such that swal()
+	 * may be used to perform the swallow. The following lines are basically a
+	 * minimal implementation of manage() with a few chunks delegated to
+	 * swal(). */
+	swee = ecalloc(1, sizeof(Client));
+	swee->win = w;
+	swee->mon = swer->mon;
+	swee->oldbw = wa->border_width;
+	swee->bw = borderpx;
+	attach(swee);
+	attachstack(swee);
+	updatetitle(swee);
+	updatesizehints(swee);
+	XSelectInput(dpy, swee->win, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
+	wc.border_width = swee->bw;
+	XConfigureWindow(dpy, swee->win, CWBorderWidth, &wc);
+	grabbuttons(swee, 0);
+	XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
+		(unsigned char *) &(swee->win), 1);
+
+	swal(swer, swee, 1);
+}
+
+/*
+ * Return swallow instance which targets window 'w' as determined by its class
+ * name, instance name and window title. Returns NULL if none is found. Pendant
+ * to wintoclient().
+ */
+Swallow *
+swalmatch(Window w)
+{
+	XClassHint ch = { NULL, NULL };
+	Swallow *s = NULL;
+	char title[sizeof(s->title)];
+
+	XGetClassHint(dpy, w, &ch);
+	if (!gettextprop(w, netatom[NetWMName], title, sizeof(title)))
+		gettextprop(w, XA_WM_NAME, title, sizeof(title));
+
+	for (s = swallows; s; s = s->next) {
+		if ((!ch.res_class || strstr(ch.res_class, s->class))
+			&& (!ch.res_name || strstr(ch.res_name, s->inst))
+			&& (title[0] == '\0' || strstr(title, s->title)))
+			break;
+	}
+
+	if (ch.res_class)
+		XFree(ch.res_class);
+	if (ch.res_name)
+		XFree(ch.res_name);
+	return s;
+}
+
+/*
+ * Interactive drag-and-drop swallow.
+ */
+void
+swalmouse(const Arg *arg)
+{
+	Client *swer, *swee;
+	XEvent ev;
+
+	if (!(swee = selmon->sel))
+		return;
+
+	if (XGrabPointer(dpy, root, False, ButtonPressMask|ButtonReleaseMask, GrabModeAsync,
+		GrabModeAsync, None, cursor[CurSwal]->cursor, CurrentTime) != GrabSuccess)
+		return;
+
+	do {
+		XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
+		switch(ev.type) {
+		case ConfigureRequest: /* fallthrough */
+		case Expose: /* fallthrough */
+		case MapRequest:
+			handler[ev.type](&ev);
+			break;
+		}
+	} while (ev.type != ButtonRelease);
+	XUngrabPointer(dpy, CurrentTime);
+
+	if ((swer = wintoclient(ev.xbutton.subwindow))
+		&& swer != swee)
+		swal(swer, swee, 0);
+
+	/* Remove accumulated pending EnterWindow events caused by the mouse
+	 * movements. */
+	XCheckMaskEvent(dpy, EnterWindowMask, &ev);
+}
+
+/*
+ * Delete swallow instance swallows and free its resources. Complement to
+ * swalreg(). If NULL is passed all registered swallows are deleted.
+ */
+void
+swalrm(Swallow *s)
+{
+	Swallow *t, **ps;
+
+	if (s) {
+		for (ps = &swallows; *ps && *ps != s; ps = &(*ps)->next);
+		*ps = s->next;
+		free(s);
+	}
+	else {
+		for(s = swallows; s; s = t) {
+			t = s->next;
+			free(s);
+		}
+		swallows = NULL;
+	}
+}
+
+/*
+ * Removes swallow instance targeting 'c' if it exists. Complement to swalreg().
+ */
+void
+swalunreg(Client *c) { Swallow *s;
+
+	for (s = swallows; s; s = s->next) {
+		if (c == s->client) {
+			swalrm(s);
+			/* Max. 1 registered swallow per client. No need to continue. */
+			break;
+		}
+	}
+}
+
+/*
+ * Stop an active swallow of swallowed client 'swee' and remap the swallower.
+ * If 'swee' is a swallower itself 'root' must point the root client of the
+ * swallow chain containing 'swee'.
+ */
+void
+swalstop(Client *swee, Client *root)
+{
+	Client *swer;
+
+	if (!swee || !(swer = swee->swer))
+		return;
+
+	swee->swer = NULL;
+	root = root ? root : swee;
+	swer->mon = root->mon;
+	swer->tags = root->tags;
+	swer->next = root->next;
+	root->next = swer;
+	swer->snext = root->snext;
+	root->snext = swer;
+	swer->isfloating = swee->isfloating;
+
+	/* Configure geometry params obtained from patches (e.g. cfacts) here. */
+	swer->cfact = 1.0;
+
+	/* If swer is not in tiling mode reuse swee's geometry. */
+	if (swer->isfloating || !root->mon->lt[root->mon->sellt]->arrange) {
+		XRaiseWindow(dpy, swer->win);
+		resize(swer, swee->x, swee->y, swee->w, swee->h, 0);
+	}
+
+	/* Override swer's border scheme which may be using SchemeSel. */
+	XSetWindowBorder(dpy, swer->win, scheme[SchemeNorm][ColBorder].pixel);
+
+	/* ICCCM 4.1.3.1 */
+	setclientstate(swer, NormalState);
+
+	XMapWindow(dpy, swer->win);
+	focus(NULL);
+	arrange(swer->mon);
+}
+
+/*
+ * Stop active swallow for currently selected client.
+ */
+void
+swalstopsel(const Arg *unused)
+{
+	if (selmon->sel)
+		swalstop(selmon->sel, NULL);
 }
 
 void
@@ -3375,13 +3865,25 @@ void unmanage(Client *c, int destroyed) {
 void unmapnotify(XEvent *e) {
   Client *c;
   XUnmapEvent *ev = &e->xunmap;
-
-  if ((c = wintoclient(ev->window))) {
-    if (ev->send_event)
-      setclientstate(c, WithdrawnState);
-    else
-      unmanage(c, 0);
-  } else if ((c = wintosystrayicon(ev->window))) {
+  int type;
+	type = wintoclient2(ev->window, &c, NULL);
+	if (type && ev->send_event) {
+		setclientstate(c, WithdrawnState);
+		return;
+	}
+	switch (type) {
+	case ClientRegular:
+		unmanage(c, 0);
+		break;
+	case ClientSwallowee:
+		swalstop(c, NULL);
+		unmanage(c, 0);
+		break;
+	case ClientSwallower:
+		/* Swallowers are never mapped. Nothing to do. */
+		break;
+  }
+  if ((c = wintosystrayicon(ev->window))) {
     /* KLUDGE! sometimes icons occasionally unmap their windows, but do
      * _not_ destroy them. We map those windows back */
     XMapRaised(dpy, c->win);
@@ -3478,14 +3980,19 @@ void updatebarpos(Monitor *m) {
 }
 
 void updateclientlist() {
-  Client *c;
+  Client *c, *d;
   Monitor *m;
 
   XDeleteProperty(dpy, root, netatom[NetClientList]);
-  for (m = mons; m; m = m->next)
-    for (c = m->clients; c; c = c->next)
-      XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32,
-                      PropModeAppend, (unsigned char *)&(c->win), 1);
+  	for (m = mons; m; m = m->next) {
+		for (c = m->clients; c; c = c->next) {
+			for (d = c; d; d = d->swer) {
+				XChangeProperty(dpy, root, netatom[NetClientList],
+					XA_WINDOW, 32, PropModeAppend,
+					(unsigned char *) &(c->win), 1);
+			}
+		}
+	}
 }
 
 void updatecurrentdesktop(void){
@@ -3847,6 +4354,42 @@ Client *wintosystrayicon(Window w) {
   for (i = systray->icons; i && i->win != w; i = i->next)
     ;
   return i;
+}
+/*
+ * Writes client managing window 'w' into 'pc' and returns type of client. If
+ * no client is found NULL is written to 'pc' and zero is returned. If a client
+ * is found and is a swallower (ClientSwallower) and proot is not NULL the root
+ * client of the swallow chain is written to 'proot'.
+ */
+int
+wintoclient2(Window w, Client **pc, Client **proot)
+{
+	Monitor *m;
+	Client *c, *d;
+
+	for (m = mons; m; m = m->next) {
+		for (c = m->clients; c; c = c->next) {
+			if (c->win == w) {
+				*pc = c;
+				if (c->swer)
+					return ClientSwallowee;
+				else
+					return ClientRegular;
+			}
+			else {
+				for (d = c->swer; d; d = d->swer) {
+					if (d->win == w) {
+						if (proot)
+							*proot = c;
+						*pc = d;
+						return ClientSwallower;
+					}
+				}
+			}
+		}
+	}
+	*pc = NULL;
+	return 0;
 }
 
 Monitor *wintomon(Window w) {

@@ -78,7 +78,7 @@
     "highlight_factor": 0.5,
     "select_factor": 0.75
   },
-  "last_page": 12,
+  "last_page": 10,
   "lib_tree": {
     "column_widths": null,
     "columns": [],
@@ -427,11 +427,11 @@
     "thickness_units": 0
   },
   "wavelength": {
-    "frequency": 1000000000.0,
+    "frequency": 24000000000.0,
     "frequencyUnit": 0,
     "periodUnit": 0,
     "permeability": 1.0,
-    "permittivity": 4.5,
+    "permittivity": 2.2,
     "speedUnit": 0,
     "wavelengthMediumUnit": 0,
     "wavelengthVacuumUnit": 0
@@ -581,10 +581,10 @@
     "maximized": false,
     "mru_path": "",
     "perspective": "layout2|",
-    "pos_x": 5,
-    "pos_y": 22,
-    "size_x": 1905,
-    "size_y": 1004,
+    "pos_x": 962,
+    "pos_y": 48,
+    "size_x": 948,
+    "size_y": 1022,
     "zoom_factors": [
       0.13,
       0.22,

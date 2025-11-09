@@ -4,10 +4,9 @@
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-
+ # export PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/core_perl:/usr/bin/site_perl:/usr/bin/vendor_perl:$PATH
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -83,9 +82,16 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 alias vim='nvim'
+alias lsdir='ls -ld */'
+alias lsdot='ls -ld .[^.]*'
+
+
 # export MANPATH="/usr/local/man:$MANPATH"
-export PATH=~/dotfiles/statusbar:$PATH
-export PATH="$HOME/dotfiles/myscripts:$PATH"
+export PATH=$HOME/dotfiles/myscripts:$PATH
+export PATH=$HOME/.local/bin:$PATH
+export PATH=$HOME/opt/openEMS/bin:$PATH
+export PATH=$HOME/pub_repos/scopehal-apps/build/src/ngscopeclient:$PATH
+export LD_LIBRARY_PATH=$HOME/pub_repos/boost_1_89_0/build/opt/boost/lib:$LD_LIBRARY_PATH
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 

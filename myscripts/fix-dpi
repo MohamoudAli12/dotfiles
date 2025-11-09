@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Copyright 2019  Luke Shumaker
+
+sanitize() {
+	[[ $? == 0 ]] || return $?
+	printf '%g\n' "$@"
+}
+
+calc() {
+	[[ $? == 0 ]] || return $?
+	sanitize "$(bc <<<"scale=6; $1")"
+}
+
+round() {
+	[[ $? == 0 ]] || return $?
+	printf '%.f\n' "$@"
+}
+
+roundup_by() {
+	[[ $? == 0 ]] || return $?
+	awk -v by="$2" 'function ceil(x) { return (x == int(x)) ? x : int(x)+1 } { print ceil($1/96)*96 }' <<<"$1"
+}
+
+max() {
+	[[ $? == 0 ]] || return $?
+	awk -v a="$1" -v b="$2" '{ print (a > b) ? a : b }' <<<''
+}
+
+errusage() {
+	if (( $# > 0 )); then
+		printf '%s: %s\n' "${0##*/}" "$(printf "$@")" >&2
+	fi
+	printf "Try '%s --help' for more information.\n" "${0##*/}" >&2
+	exit 2
+}
+
+usage() {
+	printf 'Usage: %s [OPTIONS]\n' "${0##*/}"
+	printf "Adjust DPI settings to reflect each output's current mode\n"
+	printf "(pixel resolution) and self-reported physical dimensions (mm).\n"
+	echo
+	printf 'OPTIONS:\n'
+	printf '  -h, --help      Show this message\n'
+	printf '  -n, --dry-run   Print what would be done, without doing it\n'
+	printf '  --render-dpi=<auto|auto-hwonly|DPI|XDPIxYDPI>\n'
+	printf '                  Specify what DPI applications should render\n'
+	printf '                  at (default: auto)\n'
+	printf '  --device-geometry=OUTPUT=<X>x<Y>[x<Z>]\n'
+	printf '                  Override the hardware-reported physical\n'
+	printf '                  dimensions for the X11 output OUTPUT; see\n'
+	printf '                  `get-dpi --help`\n'
+}
+
+set -euE -o pipefail
+args=$(getopt -n "${0##*/}" -o 'hn' -l 'help,dry-run,render-dpi:,device-geometry:' -- "$@") || errusage
+eval "set -- $args"
+
+arg_dry_run=false
+arg_render_dpi=auto
+get_dpi_args=()
+while (( $# > 0 )); do
+	case "$1" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		-n|--dry-run)
+			arg_dry_run=true
+			shift
+			;;
+		--render-dpi)
+			arg_render_dpi=$2
+			case "$2" in
+				auto|auto-hwonly)
+					arg_render_dpi=$2
+					;;
+				*)
+					if ! arg_render_dpi="$(sanitize "${2%%x*}" 2>/dev/null)x$(sanitize "${2#*x}" 2>/dev/null)"; then
+						errusage 'Invalid --render-dpi=%q' "$2"
+					fi
+					;;
+			esac
+			shift 2
+			;;
+		--device-geometry)
+			get_dpi_args+=("$1=$2")
+			shift 2
+			;;
+		--)
+			shift
+			break
+			;;
+	esac
+done
+if (( $# > 0 )); then
+	errusage
+fi
+
+dpis="$(get-dpi "${get_dpi_args[@]}")"
+
+if [[ $arg_render_dpi == auto ]] || [[ $arg_render_dpi == auto-hwonly ]]; then
+	arg_render_xdpi=96
+	arg_render_ydpi=96
+	while read -r source item dpi; do
+		if [[ $arg_render_dpi == auto-hwonly ]] && [[ $source != X11-RandR-hw ]]; then
+			continue
+		fi
+		arg_render_xdpi=$(max "$(round "${dpi%%x*}")" "$arg_render_xdpi")
+		arg_render_ydpi=$(max "$(round "${dpi#*x}")" "$arg_render_ydpi")
+	done <<<"$dpis"
+
+	# GDK 3 only supports integer up-scale factors, because
+	# they're morons.  Round arg_render_dpi up to a multiple of '96'.
+	arg_render_xdpi=$(roundup_by "$arg_render_xdpi" 96)
+	arg_render_ydpi=$(roundup_by "$arg_render_ydpi" 96)
+else
+	arg_render_xdpi=${arg_render_dpi%%x*}
+	arg_render_ydpi=${arg_render_dpi#*x}
+fi
+
+(
+	echo 'xrandr \'
+	printf '  --dpi %q \\\n' "${arg_render_xdpi}x${arg_render_ydpi}"
+	while read -r source item dpi; do
+		if [[ $source != X11-RandR-hw ]]; then
+			continue
+		fi
+		hw_xdpi="$(sanitize "${dpi%%x*}")"
+		hw_ydpi="$(sanitize "${dpi#*x}")"
+
+		fb_xdpi="$(calc "$arg_render_xdpi/$hw_xdpi")"
+		fb_ydpi="$(calc "$arg_render_ydpi/$hw_ydpi")"
+		printf '  --output %q --scale %q \\\n' "$item" "${fb_xdpi}x${fb_ydpi}"
+	done <<<"$dpis"
+
+	echo
+
+	printf "xrdb -merge <<<'Xft.dpi: %s'\n" "${arg_render_xdpi}x${arg_render_ydpi}"
+
+	echo
+
+	GDK_SCALE="$(calc "(${arg_render_xdpi}+${arg_render_ydpi})/2 /96")"
+	printf 'export GDK_SCALE=%q\n' "$GDK_SCALE"
+	# You're not "supposed" to set XRDB Xft.dpi if GDK_SCALE is
+	# set.  Undo Xft.dpi for GDK applications.
+	GDK_DPI_SCALE="$(calc "1/$GDK_SCALE")"
+	printf 'export GDK_DPI_SCALE=%q\n' "$GDK_DPI_SCALE"
+	echo systemctl --user import-environment GDK_SCALE GDK_DPI_SCALE
+) | (
+	if $arg_dry_run; then
+		cat
+	else
+		bash -v
+	fi
+)
